@@ -39,7 +39,7 @@ By default, the trophy base can be changed by right clicking with any slab block
 
 Example of a give command
 
-/give <player> trophymanager:trophy{ "TrophyType": "entity", "TrophyEntity": { "entityType": "minecraft:wither" }, "Scale": 0.75, "OffsetY": 0.25, "BaseBlock": "minecraft:quartz_slab", "Name": "Wither Trophy" }
+/give <player> trophymanager:trophy[minecraft:custom_data={ "TrophyType": "entity", "TrophyEntity": { "entityType": "minecraft:wither" }, "Scale": 0.75, "OffsetY": 0.25, "BaseBlock": "minecraft:quartz_slab", "Name": "Wither Trophy" }]
 
 
 
