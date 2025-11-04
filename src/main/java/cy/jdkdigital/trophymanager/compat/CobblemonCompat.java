@@ -9,7 +9,7 @@ import net.minecraft.world.level.Level;
 public class CobblemonCompat
 {
     public static Entity create(Level level, CompoundTag tag) {
-        var properties = PokemonProperties.Companion.parse("species=\"" + tag.getCompound("Pokemon").getString("Species") + "\" level=" + level);
+        var properties = PokemonProperties.Companion.parse("species=\"" + tag.getCompound("Pokemon").getString("Species") + "\" level=5");
         return properties.createEntity(level);
     }
 }
