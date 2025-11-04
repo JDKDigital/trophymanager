@@ -1,6 +1,7 @@
 package cy.jdkdigital.trophymanager.compat;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
 import cy.jdkdigital.trophymanager.init.ModBlocks;
 import net.minecraft.client.Minecraft;
@@ -42,7 +43,6 @@ public class CuriosCompat
                 blockEntity = new TrophyBlockEntity(BlockPos.ZERO, ModBlocks.TROPHY.get().defaultBlockState());
             }
             blockEntity.loadData(itemStack.get(DataComponents.CUSTOM_DATA).copyTag(), Minecraft.getInstance().level.registryAccess());
-            blockEntity.scale = 0.5f;
 
             blockEntity.isOnHead = false;
             if (slotContext.identifier().equals("head")) {
@@ -57,8 +57,8 @@ public class CuriosCompat
             poseStack.pushPose();
 
             humanoidModel.head.translateAndRotate(poseStack);
-            poseStack.translate(-0.35, 0.15, 0.35);
-            poseStack.scale(0.70F, -0.70F, -0.70F);
+            poseStack.translate(-0.35, 0.15, -0.35);
+            poseStack.scale(0.70F, -0.70F, 0.70F);
 
             Minecraft.getInstance().getBlockEntityRenderDispatcher().renderItem(blockEntity, poseStack, multiBufferSource, packedLightIn, OverlayTexture.NO_OVERLAY);
 

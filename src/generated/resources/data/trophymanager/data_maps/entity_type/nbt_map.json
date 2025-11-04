@@ -1,5 +1,272 @@
 {
   "values": {
+    "arsnouveau:starbuncle": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "arsnouveau"
+        }
+      ],
+      "nbt": [
+        "starbuncleData"
+      ]
+    },
+    "biomeswevegone:man_o_war": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "biomeswevegone"
+        }
+      ],
+      "nbt": [
+        "Age",
+        "Color"
+      ]
+    },
+    "biomeswevegone:oddion": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "biomeswevegone"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "biomeswevegone:pumpkin_warden": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "biomeswevegone"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "biomeswevegone:wreath": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "biomeswevegone"
+        }
+      ],
+      "nbt": [
+        "Type"
+      ]
+    },
+    "cobblemon:pokemon": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "cobblemon"
+        }
+      ],
+      "nbt": [
+        "Pokemon",
+        "PoseType"
+      ]
+    },
+    "dyenamics:sheep": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "dyenamics"
+        }
+      ],
+      "nbt": [
+        "Color",
+        "Sheared"
+      ]
+    },
+    "endermanoverhaul:axolotl_pet_enderman": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "endermanoverhaul"
+        }
+      ],
+      "nbt": [
+        "Owner"
+      ]
+    },
+    "endermanoverhaul:hammerhead_pet_enderman": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "endermanoverhaul"
+        }
+      ],
+      "nbt": [
+        "Owner"
+      ]
+    },
+    "endermanoverhaul:pet_enderman": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "endermanoverhaul"
+        }
+      ],
+      "nbt": [
+        "Owner"
+      ]
+    },
+    "iceandfire:amphithere": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:cyclops": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:deathworm": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:dread_beast": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:dread_ghoul": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:dread_lich": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:fire_dragon": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:hippocampus": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:hippogryph": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:hydra": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:ice_dragon": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:lightning_dragon": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:sea_serpent": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "iceandfire:troll": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
     "infernalexp:basalt_giant": {
       "neoforge:conditions": [
         {
@@ -22,6 +289,108 @@
         "ShroomloinType"
       ]
     },
+    "livingthings:crab": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "CrabVariant"
+      ]
+    },
+    "livingthings:giraffe": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "GiraffeVariant"
+      ]
+    },
+    "livingthings:lion": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "IsMale",
+        "LionVariant"
+      ]
+    },
+    "livingthings:mantaray": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "MantarayVariant"
+      ]
+    },
+    "livingthings:owl": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "OwlVariant"
+      ]
+    },
+    "livingthings:peacock": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "Fluffed"
+      ]
+    },
+    "livingthings:seahorse": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "SeahorseVariant"
+      ]
+    },
+    "livingthings:shroomie": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "ShroomieType"
+      ]
+    },
+    "livingthings:snail": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "livingthings"
+        }
+      ],
+      "nbt": [
+        "SnailVariant",
+        "ShellColorF",
+        "ShellColorB"
+      ]
+    },
     "minecraft:axolotl": {
       "nbt": [
         "Variant"
@@ -33,9 +402,19 @@
         "CollarColor"
       ]
     },
+    "minecraft:creeper": {
+      "nbt": [
+        "powered"
+      ]
+    },
+    "minecraft:drowned": {
+      "nbt": [
+        "IsBaby"
+      ]
+    },
     "minecraft:fox": {
       "nbt": [
-        "Variant"
+        "Type"
       ]
     },
     "minecraft:frog": {
@@ -46,6 +425,11 @@
     "minecraft:horse": {
       "nbt": [
         "Variant"
+      ]
+    },
+    "minecraft:husk": {
+      "nbt": [
+        "IsBaby"
       ]
     },
     "minecraft:llama": {
@@ -69,6 +453,53 @@
         "Variant"
       ]
     },
+    "minecraft:piglin": {
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "minecraft:pufferfish": {
+      "nbt": [
+        "PuffState"
+      ]
+    },
+    "minecraft:rabbit": {
+      "nbt": [
+        "RabbitType"
+      ]
+    },
+    "minecraft:sheep": {
+      "nbt": [
+        "Color",
+        "Sheared"
+      ]
+    },
+    "minecraft:sniffer": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "sussysniffers"
+        }
+      ],
+      "nbt": [
+        "variant"
+      ]
+    },
+    "minecraft:snow_golem": {
+      "nbt": [
+        "Pumpkin"
+      ]
+    },
+    "minecraft:trader_llama": {
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "minecraft:tropical_fish": {
+      "nbt": [
+        "Variant"
+      ]
+    },
     "minecraft:villager": {
       "nbt": [
         "VillagerData"
@@ -80,16 +511,38 @@
         "CollarColor"
       ]
     },
+    "minecraft:zoglin": {
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "minecraft:zombie": {
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "minecraft:zombie_horse": {
+      "nbt": [
+        "Age",
+        "ForcedAge"
+      ]
+    },
     "minecraft:zombie_villager": {
       "nbt": [
-        "VillagerData"
+        "VillagerData",
+        "IsBaby"
+      ]
+    },
+    "minecraft:zombified_piglin": {
+      "nbt": [
+        "IsBaby"
       ]
     },
     "productivebees:configurable_bee": {
       "neoforge:conditions": [
         {
           "type": "neoforge:mod_loaded",
-          "modid": "productivebeees"
+          "modid": "productivebees"
         }
       ],
       "nbt": [

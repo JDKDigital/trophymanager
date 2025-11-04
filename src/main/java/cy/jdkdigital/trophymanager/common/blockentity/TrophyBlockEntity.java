@@ -2,6 +2,7 @@ package cy.jdkdigital.trophymanager.common.blockentity;
 
 import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
+import cy.jdkdigital.trophymanager.compat.CobblemonCompat;
 import cy.jdkdigital.trophymanager.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -13,7 +14,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -23,9 +23,9 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class TrophyBlockEntity extends BlockEntity
 {
-    private static final Map<Integer, Entity> cachedEntities = new HashMap<>();
+    public static final Map<Integer, Entity> cachedEntities = new HashMap<>();
 
     public String trophyType = "item"; // item, entity
     public ItemStack item = null;
@@ -179,15 +179,21 @@ public class TrophyBlockEntity extends BlockEntity
         EntityType<?> type = EntityType.byString(entityType).orElse(null);
         if (type != null) {
             try {
-                Entity loadedEntity = type.create(level);
-                if (loadedEntity != null) {
-                    loadedEntity.load(tag);
-                    return loadedEntity;
+                Entity loadedEntity;
+                if (ModList.get().isLoaded("cobblemon") && entityType.contains("cobblemon:")) {
+                    return CobblemonCompat.create(level, tag);
+                } else {
+                    loadedEntity = type.create(level);
+                    if (loadedEntity != null) {
+                        loadedEntity.load(tag);
+                        return loadedEntity;
+                    }
                 }
             } catch (Exception e) {
                 TrophyManager.LOGGER.warn("Unable to load trophy entity " + entityType + ". Please report it to the mod author at https://github.com/JDKDigital/trophymanager/issues");
                 TrophyManager.LOGGER.warn("Error: " + e.getMessage());
                 TrophyManager.LOGGER.warn("Tag: " + tag);
+                e.printStackTrace();
                 return null;
             }
         }

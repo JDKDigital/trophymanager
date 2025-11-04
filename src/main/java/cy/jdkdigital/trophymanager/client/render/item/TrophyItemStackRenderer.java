@@ -13,36 +13,38 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nonnull;
+import java.lang.ref.WeakReference;
 
 public class TrophyItemStackRenderer extends BlockEntityWithoutLevelRenderer
 {
-    TrophyBlockEntity blockEntity = null;
+    WeakReference<TrophyBlockEntity> blockEntity;
 
     public TrophyItemStackRenderer() {
         super(null, null);
     }
 
     @Override
-    public void renderByItem(@Nonnull ItemStack stack, @Nonnull ItemDisplayContext transformType, @Nonnull PoseStack matrixStack, @Nonnull MultiBufferSource buffer, int packedLightIn, int packedUV) {
+    public void renderByItem(@Nonnull ItemStack stack, @Nonnull ItemDisplayContext transformType, @Nonnull PoseStack poseStack, @Nonnull MultiBufferSource buffer, int packedLightIn, int packedUV) {
         if (!stack.has(DataComponents.CUSTOM_DATA)) {
             return;
         }
-        if (blockEntity == null) {
-            blockEntity = new TrophyBlockEntity(BlockPos.ZERO, ModBlocks.TROPHY.get().defaultBlockState());
-        }
-        blockEntity.loadData(stack.get(DataComponents.CUSTOM_DATA).copyTag(), Minecraft.getInstance().level.registryAccess());
-        blockEntity.scale = 0.5f;
-//        matrixStack.mulPose(Axis.YP.rotationDegrees(180f));
-
-        blockEntity.isOnHead = false;
-        if (transformType.equals(ItemDisplayContext.HEAD)) {
-            blockEntity.isOnHead = true;
+        TrophyBlockEntity weakBlockEntity = blockEntity != null ? blockEntity.get() : null;
+        if (weakBlockEntity == null) {
+            blockEntity = new WeakReference<>(new TrophyBlockEntity(BlockPos.ZERO, ModBlocks.TROPHY.get().defaultBlockState()));
+            weakBlockEntity = blockEntity.get();
         }
 
-        matrixStack.pushPose();
+        if (weakBlockEntity != null) {
+            weakBlockEntity.loadData(stack.get(DataComponents.CUSTOM_DATA).copyTag(), Minecraft.getInstance().level.registryAccess());
+            weakBlockEntity.isOnHead = transformType.equals(ItemDisplayContext.HEAD);
 
-        Minecraft.getInstance().getBlockEntityRenderDispatcher().renderItem(blockEntity, matrixStack, buffer, packedLightIn, packedUV);
+            poseStack.pushPose();
 
-        matrixStack.popPose();
+            poseStack.mulPose(Axis.YP.rotationDegrees(180f));
+            poseStack.translate(-1.0f, 0, -1.0f);
+            Minecraft.getInstance().getBlockEntityRenderDispatcher().renderItem(weakBlockEntity, poseStack, buffer, packedLightIn, packedUV);
+
+            poseStack.popPose();
+        }
     }
 }

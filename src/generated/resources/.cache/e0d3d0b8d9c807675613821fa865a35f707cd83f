@@ -1,2 +1,4 @@
-// 1.21.1	2024-10-19T19:30:03.7591526	Data Maps
-5deb52e3eea7a8ec0d447106d70fdf6587745efc data/trophymanager/data_maps/entity_type/nbt_map.json
+// 1.21.1	2025-07-19T22:45:41.286106	Data Maps
+1f603f3881d637b124fb6e400e2310ec6d0306a7 data/trophymanager/data_maps/entity_type/drop_rate_map.json
+476796f869714eded351f684c2e1239f03d66ca2 data/trophymanager/data_maps/entity_type/nbt_map.json
+9f26162a16f8272a29a24dc26749997a8530ec36 data/trophymanager/data_maps/entity_type/properties_map.json

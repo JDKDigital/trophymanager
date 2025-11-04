@@ -3,8 +3,10 @@ package cy.jdkdigital.trophymanager;
 import cy.jdkdigital.trophymanager.client.render.block.TrophyBlockEntityRenderer;
 import cy.jdkdigital.trophymanager.client.render.entity.PlayerTrophyRenderer;
 import cy.jdkdigital.trophymanager.common.block.TrophyBlock;
+import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
 import cy.jdkdigital.trophymanager.common.datamap.DropRateMap;
 import cy.jdkdigital.trophymanager.common.datamap.NbtMap;
+import cy.jdkdigital.trophymanager.common.datamap.PropertiesMap;
 import cy.jdkdigital.trophymanager.compat.CuriosCompat;
 import cy.jdkdigital.trophymanager.init.ModBlockEntities;
 import cy.jdkdigital.trophymanager.init.ModBlocks;
@@ -12,6 +14,7 @@ import cy.jdkdigital.trophymanager.init.ModEntities;
 //import cy.jdkdigital.trophymanager.network.Networking;
 import cy.jdkdigital.trophymanager.network.PacketOpenGui;
 import cy.jdkdigital.trophymanager.network.PacketUpdateTrophy;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -24,6 +27,7 @@ import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -45,6 +49,7 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.DirectionalPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -53,7 +58,7 @@ import net.neoforged.neoforge.registries.datamaps.RegisterDataMapTypesEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod("trophymanager")
+@Mod(TrophyManager.MODID)
 public class TrophyManager
 {
     public static final Logger LOGGER = LogManager.getLogger();
@@ -61,6 +66,7 @@ public class TrophyManager
 
     public static final DataMapType<EntityType<?>, NbtMap> NBT_MAP = DataMapType.builder(ResourceLocation.fromNamespaceAndPath(MODID, "nbt_map"), Registries.ENTITY_TYPE, NbtMap.CODEC).synced(NbtMap.NBT_CODEC, false).build();
     public static final DataMapType<EntityType<?>, DropRateMap> DROP_RATE_MAP = DataMapType.builder(ResourceLocation.fromNamespaceAndPath(MODID, "drop_rate_map"), Registries.ENTITY_TYPE, DropRateMap.CODEC).synced(DropRateMap.DROP_RATE_CODEC, false).build();
+    public static final DataMapType<EntityType<?>, PropertiesMap> PROPERTIES_MAP = DataMapType.builder(ResourceLocation.fromNamespaceAndPath(MODID, "properties_map"), Registries.ENTITY_TYPE, PropertiesMap.CODEC).synced(PropertiesMap.CODEC, false).build();
 
     public TrophyManager(IEventBus modEventBus, ModContainer modContainer) {
         // Register ourselves for server and other game events we are interested in
@@ -149,7 +155,7 @@ public class TrophyManager
     }
 
     @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD, modid = MODID)
-    public static class EventHandler
+    public static class ModEventHandler
     {
         @SubscribeEvent
         public static void onEntityAttributeCreate(EntityAttributeCreationEvent event) {
@@ -193,6 +199,17 @@ public class TrophyManager
         private static void registerDataMap(final RegisterDataMapTypesEvent event) {
             event.register(NBT_MAP);
             event.register(DROP_RATE_MAP);
+            event.register(PROPERTIES_MAP);
+        }
+    }
+
+
+    @EventBusSubscriber(modid = MODID)
+    public static class EventHandler
+    {
+        @SubscribeEvent
+        private static void levelUnload(final LevelEvent.Unload event) {
+            TrophyBlockEntity.cachedEntities.clear();
         }
     }
 

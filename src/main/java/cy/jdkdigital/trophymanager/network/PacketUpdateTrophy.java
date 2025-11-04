@@ -10,6 +10,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record PacketUpdateTrophy(BlockPos pos, CompoundTag tag) implements CustomPacketPayload
@@ -33,6 +34,7 @@ public record PacketUpdateTrophy(BlockPos pos, CompoundTag tag) implements Custo
             trophyBlockEntity.offsetY = Math.min(data.tag().getDouble("OffsetY"), TrophyManagerConfig.GENERAL.maxYOffset.get());
             trophyBlockEntity.scale = (float) Math.min(data.tag().getFloat("Scale"), TrophyManagerConfig.GENERAL.maxSize.get());
             trophyBlockEntity.setChanged();
+            context.player().level().sendBlockUpdated(data.pos(), trophyBlockEntity.getBlockState(), trophyBlockEntity.getBlockState(), Block.UPDATE_CLIENTS);
         }
     }
 

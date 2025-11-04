@@ -1,6 +1,8 @@
 package cy.jdkdigital.trophymanager.common.block;
 
+import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import cy.jdkdigital.trophymanager.TrophyManager;
@@ -178,14 +180,13 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
 
     @Override
     protected InteractionResult useWithoutItem(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, BlockHitResult pHitResult) {
-        TrophyManager.LOGGER.info("useWithoutItem");
         if (TrophyManagerConfig.GENERAL.allowNonOpEdit.get() || pPlayer.hasPermissions(2)) {
             final BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (blockEntity instanceof TrophyBlockEntity && pPlayer instanceof ServerPlayer serverPlayer) {
-                if (!pLevel.isClientSide()) {
+            if (blockEntity instanceof TrophyBlockEntity) {
+                if (pPlayer instanceof ServerPlayer serverPlayer) {
                     PacketDistributor.sendToPlayer(serverPlayer, new PacketOpenGui(blockEntity.getBlockPos()));
                 }
-                return InteractionResult.SUCCESS_NO_ITEM_USED;
+                return InteractionResult.sidedSuccess(pLevel.isClientSide());
             }
         }
 
@@ -276,7 +277,7 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
         CompoundTag entityTag = new CompoundTag();
         entityTag.putString("entityType", "trophymanager:player");
         entityTag.putString("uuid", player.getUUID().toString());
-        trophyTag.putString("Name", player.getDisplayName().getString() + " trophy");
+        trophyTag.putString("Name", player.getDisplayName().getString() + " Trophy");
         trophyTag.put("TrophyEntity", entityTag);
 
         trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));
@@ -291,14 +292,22 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
 
     public static ItemStack createTrophy(Holder<EntityType<?>> entityType, CompoundTag tag, String name) {
         String entityId = entityType.getKey().location().toString();
+        if (entityId == null || entityId.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
         CompoundTag entityTag = new CompoundTag();
         var data = entityType.getData(TrophyManager.NBT_MAP);
+//        TrophyManager.LOGGER.info("create trophy for " + entityId + " from " + tag);
         if (data != null) {
             data.nbtKeys().forEach(key -> {
                 if (tag.contains(key)) {
                     entityTag.put(key, tag.get(key));
                 }
             });
+        }
+
+        if (tag.contains("CustomName")) {
+            entityTag.putString("CustomName", tag.getString("CustomName"));
         }
 
         CompoundTag trophyTag = new CompoundTag();
@@ -310,31 +319,32 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
                 entityTag.putInt("Age", -1);
             }
         }
-        switch (entityId) {
-            case "axolotl" -> entityTag.putInt("Variant", 4);
-            case "ender_dragon" -> {
-                trophyTag.putFloat("Scale", 0.1f);
-                trophyTag.putDouble("OffsetY", 0.8d);
-            }
-            case "ghast" -> {
-                trophyTag.putFloat("Scale", 0.4f);
-                trophyTag.putDouble("OffsetY", 1.4d);
-            }
-            case "bee", "phantom", "vex" -> trophyTag.putDouble("OffsetY", 0.8d);
-            case "pufferfish" -> entityTag.putInt("PuffState", 1);
-            case "shulker" -> {
-                entityTag.putInt("Color", 2);
-                entityTag.putInt("Peek", 30);
-            }
-            case "glow_squid" -> {
-                trophyTag.putFloat("Scale", 0.4f);
-                trophyTag.putFloat("RotX", 70f);
-                trophyTag.putDouble("OffsetY", 0.7d);
-            }
+
+        var defaultProperties = entityType.getData(TrophyManager.PROPERTIES_MAP);
+        if (defaultProperties != null) {
+            trophyTag.putFloat("Scale", defaultProperties.scale());
+            trophyTag.putFloat("RotX", defaultProperties.rotX());
+            trophyTag.putDouble("OffsetY", defaultProperties.yOffset());
         }
 
         trophyTag.put("TrophyEntity", entityTag);
-        trophyTag.putString("Name", name + " trophy");
+        trophyTag.putString("Name", name + " Trophy");
+
+        trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));
+
+        return trophy;
+    }
+
+    public static ItemStack createTrophy(Level level, ItemStack stack, String name) {
+        if (stack.isEmpty() || level == null) {
+            return ItemStack.EMPTY;
+        }
+
+        CompoundTag trophyTag = new CompoundTag();
+        ItemStack trophy = new ItemStack(ModBlocks.TROPHY.get());
+        trophyTag.putString("TrophyType", "item");
+        trophyTag.put("TrophyItem", stack.save(level.registryAccess()));
+        trophyTag.putString("Name", name + " Trophy");
 
         trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));
 
