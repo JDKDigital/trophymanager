@@ -3,6 +3,7 @@ package cy.jdkdigital.trophymanager.client.gui;
 import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
+import cy.jdkdigital.trophymanager.compat.CobblemonCompat;
 import cy.jdkdigital.trophymanager.network.PacketUpdateTrophy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class TrophyScreen extends Screen
@@ -39,8 +41,14 @@ public class TrophyScreen extends Screen
         addRenderableWidget(Button.builder(Component.literal("-"), button -> adjustOffsetY(-1)).pos(relX + 10, relY + 35).size(20, 20).build());
         addRenderableWidget(Button.builder(Component.literal("+"), button -> adjustOffsetY(1)).pos(relX + 120, relY + 35).size(20, 20).build());
 
+        if (ModList.get().isLoaded("cobblemon") && CobblemonCompat.isPokemonTrophy(trophy)) {
+            addRenderableWidget(Button.builder(Component.literal("<"), button -> CobblemonCompat.changePose(trophy, -1)).pos(relX + 10, relY + 60).size(20, 20).build());
+            addRenderableWidget(Button.builder(Component.literal(">"), button -> CobblemonCompat.changePose(trophy, 1)).pos(relX + 120, relY + 60).size(20, 20).build());
+            relY += 25;
+        }
+
         addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> close()).pos(relX + 10, relY + 60).size(65, 20).build());
-        addRenderableWidget(Button.builder(Component.translatable("gui.ok"), button -> save(this)).pos(relX + 76, relY + 60).size(65, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("gui.apply"), button -> save(this)).pos(relX + 76, relY + 60).size(65, 20).build());
     }
 
     @Override
@@ -51,7 +59,9 @@ public class TrophyScreen extends Screen
 
         guiGraphics.drawCenteredString(font, "" + trophy.scale, relX + 75, relY + 15, 14737632);
         guiGraphics.drawCenteredString(font, "" + trophy.offsetY, relX + 75, relY + 40, 14737632);
-
+        if (ModList.get().isLoaded("cobblemon") && CobblemonCompat.isPokemonTrophy(trophy)) {
+            guiGraphics.drawCenteredString(font, CobblemonCompat.getPose(trophy), relX + 75, relY + 65, 14737632);
+        }
         super.renderMenuBackground(guiGraphics);
     }
 
@@ -94,6 +104,9 @@ public class TrophyScreen extends Screen
         CompoundTag tag = new CompoundTag();
         tag.putDouble("OffsetY", screen.trophy.offsetY);
         tag.putFloat("Scale", screen.trophy.scale);
+        if (ModList.get().isLoaded("cobblemon") && CobblemonCompat.isPokemonTrophy(screen.trophy)) {
+            tag.putString("PoseType", screen.trophy.entity.getString("PoseType"));
+        }
         PacketDistributor.sendToServer(new PacketUpdateTrophy(screen.trophy.getBlockPos(), tag));
         close();
     }

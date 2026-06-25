@@ -1,5 +1,16 @@
 {
   "values": {
+    "ars_elemental:siren_entity": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "ars_elemental"
+        }
+      ],
+      "nbt": [
+        "color"
+      ]
+    },
     "arsnouveau:starbuncle": {
       "neoforge:conditions": [
         {
@@ -66,6 +77,17 @@
       "nbt": [
         "Pokemon",
         "PoseType"
+      ]
+    },
+    "creeperoverhaul:ocean_creeper": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "creeperoverhaul"
+        }
+      ],
+      "nbt": [
+        "Variant"
       ]
     },
     "dyenamics:sheep": {
@@ -245,6 +267,17 @@
         "Variant"
       ]
     },
+    "iceandfire:pixie": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "iceandfire"
+        }
+      ],
+      "nbt": [
+        "Color"
+      ]
+    },
     "iceandfire:sea_serpent": {
       "neoforge:conditions": [
         {
@@ -396,6 +429,16 @@
         "Variant"
       ]
     },
+    "minecraft:bee": {
+      "nbt": [
+        "HasNectar"
+      ]
+    },
+    "minecraft:bogged": {
+      "nbt": [
+        "sheared"
+      ]
+    },
     "minecraft:cat": {
       "nbt": [
         "variant",
@@ -412,6 +455,17 @@
         "IsBaby"
       ]
     },
+    "minecraft:ender_dragon": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "neoforge:attachments"
+      ]
+    },
     "minecraft:fox": {
       "nbt": [
         "Type"
@@ -420,6 +474,13 @@
     "minecraft:frog": {
       "nbt": [
         "variant"
+      ]
+    },
+    "minecraft:goat": {
+      "nbt": [
+        "HasLeftHorn",
+        "HasRightHorn",
+        "IsScreamingGoat"
       ]
     },
     "minecraft:horse": {
@@ -472,6 +533,12 @@
       "nbt": [
         "Color",
         "Sheared"
+      ]
+    },
+    "minecraft:shulker": {
+      "nbt": [
+        "Color",
+        "Peek"
       ]
     },
     "minecraft:sniffer": {
@@ -547,6 +614,372 @@
       ],
       "nbt": [
         "type"
+      ]
+    },
+    "shiny:shiny_axolotl": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "shiny:shiny_bee": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "HasNectar"
+      ]
+    },
+    "shiny:shiny_bogged": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "sheared"
+      ]
+    },
+    "shiny:shiny_cat": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "variant",
+        "CollarColor"
+      ]
+    },
+    "shiny:shiny_creeper": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "powered"
+      ]
+    },
+    "shiny:shiny_drowned": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "shiny:shiny_fox": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Type"
+      ]
+    },
+    "shiny:shiny_frog": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "variant"
+      ]
+    },
+    "shiny:shiny_goat": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "HasLeftHorn",
+        "HasRightHorn",
+        "IsScreamingGoat"
+      ]
+    },
+    "shiny:shiny_horse": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "shiny:shiny_husk": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "shiny:shiny_llama": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "shiny:shiny_mooshroom": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Type"
+      ]
+    },
+    "shiny:shiny_panda": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "MainGene",
+        "HiddenGene"
+      ]
+    },
+    "shiny:shiny_parrot": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "shiny:shiny_piglin": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "shiny:shiny_pufferfish": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "PuffState"
+      ]
+    },
+    "shiny:shiny_rabbit": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "RabbitType"
+      ]
+    },
+    "shiny:shiny_sheep": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Color",
+        "Sheared"
+      ]
+    },
+    "shiny:shiny_shulker": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Color",
+        "Peek"
+      ]
+    },
+    "shiny:shiny_sniffer": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        },
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "sussysniffers"
+        }
+      ],
+      "nbt": [
+        "variant"
+      ]
+    },
+    "shiny:shiny_snow_golem": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Pumpkin"
+      ]
+    },
+    "shiny:shiny_trader_llama": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "shiny:shiny_tropical_fish": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Variant"
+      ]
+    },
+    "shiny:shiny_villager": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "VillagerData"
+      ]
+    },
+    "shiny:shiny_wolf": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "variant",
+        "CollarColor"
+      ]
+    },
+    "shiny:shiny_zoglin": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "shiny:shiny_zombie": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "shiny:shiny_zombie_horse": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "Age",
+        "ForcedAge"
+      ]
+    },
+    "shiny:shiny_zombie_villager": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "VillagerData",
+        "IsBaby"
+      ]
+    },
+    "shiny:shiny_zombified_piglin": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "nbt": [
+        "IsBaby"
+      ]
+    },
+    "variantsandventures:murk": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "variantsandventures"
+        }
+      ],
+      "nbt": [
+        "Variant",
+        "Sheared"
       ]
     }
   }

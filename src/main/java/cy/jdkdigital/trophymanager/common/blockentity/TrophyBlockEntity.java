@@ -14,11 +14,13 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.NeutralMob;
+import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
@@ -141,15 +143,20 @@ public class TrophyBlockEntity extends BlockEntity
     }
 
     public Entity getCachedEntity() {
+        return getCachedEntity(false);
+    }
+    public Entity getCachedEntity(boolean forceRefresh) {
         if (entity != null) {
             int key = entity.hashCode();
-            if (!cachedEntities.containsKey(key)) {
+            if (!cachedEntities.containsKey(key) || forceRefresh) {
                 Entity cachedEntity = createEntity(level, entity);
                 if (cachedEntity != null) {
                     if (cachedEntity instanceof NeutralMob && entity.contains("AngerTime")) {
                         ((NeutralMob) cachedEntity).setRemainingPersistentAngerTime(entity.getInt("AngerTime"));
-//                    } else if (cachedEntity instanceof Shulker && entity.contains("Peek")) {
-//                        ((Shulker) cachedEntity).setRawPeekAmount(entity.getInt("Peek"));
+                    } else if (cachedEntity instanceof Shulker && entity.contains("Peek")) {
+                        float peek = Mth.clamp(entity.getByte("Peek") * 0.01F, 0.0F, 1.0F);
+                        ((Shulker) cachedEntity).currentPeekAmount = peek;
+                        ((Shulker) cachedEntity).currentPeekAmountO = peek;
                     }
                     try {
                         addPassengers(cachedEntity, entity);

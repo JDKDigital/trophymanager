@@ -33,6 +33,10 @@ public record PacketUpdateTrophy(BlockPos pos, CompoundTag tag) implements Custo
         if (context.player().level().getBlockEntity(data.pos()) instanceof TrophyBlockEntity trophyBlockEntity) {
             trophyBlockEntity.offsetY = Math.min(data.tag().getDouble("OffsetY"), TrophyManagerConfig.GENERAL.maxYOffset.get());
             trophyBlockEntity.scale = (float) Math.min(data.tag().getFloat("Scale"), TrophyManagerConfig.GENERAL.maxSize.get());
+            if (data.tag().contains("PoseType")) {
+                trophyBlockEntity.entity.putString("PoseType", data.tag().getString("PoseType"));
+            }
+            trophyBlockEntity.getCachedEntity();
             trophyBlockEntity.setChanged();
             context.player().level().sendBlockUpdated(data.pos(), trophyBlockEntity.getBlockState(), trophyBlockEntity.getBlockState(), Block.UPDATE_CLIENTS);
         }

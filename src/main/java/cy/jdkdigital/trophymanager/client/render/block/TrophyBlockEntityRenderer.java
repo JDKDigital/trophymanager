@@ -41,7 +41,7 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         if (trophyTileEntity.trophyType != null && Minecraft.getInstance().level != null) {
             trophyTileEntity.setLevel(Minecraft.getInstance().level);
             if (trophyTileEntity.isOnHead) {
-                poseStack.translate(0,0.4f, 0);
+                poseStack.translate(0, 0.4f, 0);
             }
             if (trophyTileEntity.trophyType.equals("item") && trophyTileEntity.item != null) {
                 renderItem(trophyTileEntity, poseStack, buffer, combinedLightIn, combinedOverlayIn);
@@ -94,7 +94,7 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         poseStack.popPose();
     }
 
-    private void renderEntity(TrophyBlockEntity trophyTileEntity, PoseStack matrixStack, @Nonnull MultiBufferSource buffer, int combinedLightIn) {
+    private void renderEntity(TrophyBlockEntity trophyTileEntity, PoseStack poseStack, @Nonnull MultiBufferSource buffer, int combinedLightIn) {
         float angle = 0;
         if (trophyTileEntity.getLevel() != null) {
             Direction facing = trophyTileEntity.getBlockState().getValue(HorizontalDirectionalBlock.FACING);
@@ -109,26 +109,33 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
             }
         }
 
-        matrixStack.pushPose();
-        matrixStack.translate(0.5f, trophyTileEntity.offsetY, 0.5f);
-        matrixStack.mulPose(Axis.YP.rotationDegrees(angle));
-        matrixStack.mulPose(Axis.XP.rotationDegrees(trophyTileEntity.rotX));
-        matrixStack.scale(trophyTileEntity.scale, trophyTileEntity.scale, trophyTileEntity.scale);
+        poseStack.pushPose();
+        poseStack.translate(0.5f, trophyTileEntity.offsetY, 0.5f);
+        poseStack.mulPose(Axis.YP.rotationDegrees(angle));
+        poseStack.mulPose(Axis.XP.rotationDegrees(trophyTileEntity.rotX));
+        poseStack.scale(trophyTileEntity.scale, trophyTileEntity.scale, trophyTileEntity.scale);
 
         if (trophyTileEntity.entity.getString("entityType").equals("minecraft:ender_dragon")) {
-            matrixStack.mulPose(Axis.XP.rotationDegrees(180f));
-            matrixStack.mulPose(Axis.YP.rotationDegrees(180f));
+            poseStack.mulPose(Axis.XP.rotationDegrees(180f));
+            poseStack.mulPose(Axis.YP.rotationDegrees(180f));
         }
 
         EntityRenderDispatcher entityRendererManager = Minecraft.getInstance().getEntityRenderDispatcher();
         entityRendererManager.setRenderShadow(false);
         Entity cachedEntity = trophyTileEntity.getCachedEntity();
         if (cachedEntity != null) {
-            entityRendererManager.render(cachedEntity, 0, 0, 0., 1, 1, matrixStack, buffer, combinedLightIn);
-            renderPassengers(cachedEntity, entityRendererManager, matrixStack, buffer, combinedLightIn);
+            try {
+                entityRendererManager.render(cachedEntity, 0, 0, 0., 1, 1, poseStack, buffer, combinedLightIn);
+                renderPassengers(cachedEntity, entityRendererManager, poseStack, buffer, combinedLightIn);
+                if (buffer instanceof MultiBufferSource.BufferSource bufferSource) {
+                    bufferSource.endBatch();
+                }
+            } catch (Exception e) {
+                // too bad
+            }
         }
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 
     private static void renderPassengers(Entity entity, EntityRenderDispatcher entityRendererManager, PoseStack matrixStack, MultiBufferSource buffer, int combinedLightIn) {
@@ -148,7 +155,7 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
 
     @Override
     public int getViewDistance() {
-        return 128;
+        return 256;
     }
 
     @Override

@@ -213,8 +213,13 @@ public class TrophyManager
         }
     }
 
-    private static String idToName(String id) {
-        int start = id.indexOf(":") + 1;
-        return id.substring(start, start + 1).toUpperCase() + id.substring(start + 1).replace("_", " ");
+    public static String idToName(String id) {
+        String[] parts = id.substring(id.indexOf(":") + 1).split("_");
+        for (int i = 0; i < parts.length; i++) {
+            if (!parts[i].isEmpty()) {
+                parts[i] = parts[i].substring(0, 1).toUpperCase() + parts[i].substring(1);
+            }
+        }
+        return String.join(" ", parts);
     }
 }

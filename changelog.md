@@ -1,3 +1,32 @@
+1.21.1-2.5.0
+
+- Added Shiny! Mobs support, capturing the visual state of shiny copies including the shiny Ender Dragon
+- Added entity variant support for Ars Elemental Sirens, Creeper Overhaul Ocean Creepers, Ice and Fire Pixies and Variants&Ventures Murks
+- Capture more vanilla visual states: Shulker color and lid state, Goat horns, Bee nectar and sheared Bogged
+- Fixed villager trophies missing their clothing when placed in the world
+
+
+1.21.1-2.4.3
+
+- Move crash guards to a safer location
+
+
+1.21.1-2.4.2
+
+- Added extra crash guards when rendering trophies
+
+
+1.21.1-2.4.1
+
+- Support for cobblemon regional variants and shiny
+
+
+1.21.1-2.4.0
+
+- Added GUI options to change a cobblemon trophys pose
+- Increased render distance
+
+
 1.21.1-2.3.0
 
 - Proper Cobblemon support

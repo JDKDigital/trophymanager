@@ -74,6 +74,61 @@
       "rot": 0.0,
       "scale": 1.0
     },
+    "shiny:shiny_bee": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "offset": 0.8,
+      "rot": 0.0,
+      "scale": 1.0
+    },
+    "shiny:shiny_ghast": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "offset": 1.4,
+      "rot": 0.0,
+      "scale": 0.4
+    },
+    "shiny:shiny_glow_squid": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "offset": 0.7,
+      "rot": 70.0,
+      "scale": 0.4
+    },
+    "shiny:shiny_phantom": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "offset": 0.8,
+      "rot": 0.0,
+      "scale": 1.0
+    },
+    "shiny:shiny_vex": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "shiny"
+        }
+      ],
+      "offset": 0.8,
+      "rot": 0.0,
+      "scale": 1.0
+    },
     "twilightforest:hydra": {
       "neoforge:conditions": [
         {
