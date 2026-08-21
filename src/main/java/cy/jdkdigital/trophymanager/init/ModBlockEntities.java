@@ -12,5 +12,5 @@ public final class ModBlockEntities
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(BuiltInRegistries.BLOCK_ENTITY_TYPE, TrophyManager.MODID);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TrophyBlockEntity>> TROPHY
-            = BLOCK_ENTITIES.register("trophy", () -> BlockEntityType.Builder.of(TrophyBlockEntity::new, ModBlocks.TROPHY.get()).build(null));
+            = BLOCK_ENTITIES.register("trophy", () -> new BlockEntityType<>(TrophyBlockEntity::new, ModBlocks.TROPHY.get()));
 }

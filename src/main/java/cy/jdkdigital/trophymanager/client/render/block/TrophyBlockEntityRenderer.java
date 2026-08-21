@@ -2,154 +2,176 @@ package cy.jdkdigital.trophymanager.client.render.block;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
+import cy.jdkdigital.trophymanager.client.render.block.state.TrophyRenderState;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.PlayerModel;
-import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.block.BlockModelResolver;
+import net.minecraft.client.renderer.block.model.BlockDisplayContext;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.item.ItemModelResolver;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nonnull;
 
-public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBlockEntity>
+public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBlockEntity, TrophyRenderState>
 {
-    private PlayerInfo playerInfo;
-    PlayerModel<Player> playerModelRegular;
-    PlayerModel<Player> playerModelSlim;
+    private static final BlockDisplayContext BASE_DISPLAY_CONTEXT = BlockDisplayContext.create();
+
+    private final EntityRenderDispatcher entityRenderDispatcher;
+    private final ItemModelResolver itemModelResolver;
+    private final BlockModelResolver blockModelResolver;
 
     public TrophyBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
-        this.playerModelRegular = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false);
-        this.playerModelSlim = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM), true);
+        this.entityRenderDispatcher = context.entityRenderer();
+        this.itemModelResolver = context.itemModelResolver();
+        this.blockModelResolver = context.blockModelResolver();
     }
 
     @Override
-    public void render(@Nonnull TrophyBlockEntity trophyTileEntity, float v, @Nonnull PoseStack poseStack, @Nonnull MultiBufferSource buffer, int combinedLightIn, int combinedOverlayIn) {
-        if (trophyTileEntity.trophyType != null && Minecraft.getInstance().level != null) {
-            trophyTileEntity.setLevel(Minecraft.getInstance().level);
-            if (trophyTileEntity.isOnHead) {
-                poseStack.translate(0, 0.4f, 0);
+    public TrophyRenderState createRenderState() {
+        return new TrophyRenderState();
+    }
+
+    @Override
+    public void extractRenderState(TrophyBlockEntity be, TrophyRenderState state, float partialTick, @Nonnull Vec3 cameraPos, ModelFeatureRenderer.CrumblingOverlay crumbling) {
+        BlockEntityRenderState.extractBase(be, state, crumbling);
+
+        if (be.getLevel() == null && Minecraft.getInstance().level != null) {
+            be.setLevel(Minecraft.getInstance().level);
+        }
+
+        state.isOnHead = be.isOnHead;
+        state.offsetY = be.offsetY;
+        state.rotX = be.rotX;
+        state.scale = be.scale;
+        state.renderItem = false;
+        state.entityRenderState = null;
+        state.passengers.clear();
+        state.hasBase = false;
+
+        if ("item".equals(be.trophyType) && be.item != null && !be.item.isEmpty()) {
+            state.renderItem = true;
+            state.itemIsBlock = be.item.getItem() instanceof BlockItem;
+            boolean rotate = TrophyManagerConfig.GENERAL.rotateItemTrophies.get() && !state.itemIsBlock;
+            double tick;
+            if (rotate) {
+                tick = System.currentTimeMillis() / 800.0D;
+            } else {
+                tick = switch (facing(be)) {
+                    case NORTH -> 6D;
+                    case EAST -> 3D;
+                    case WEST -> 9D;
+                    default -> 0D;
+                };
             }
-            if (trophyTileEntity.trophyType.equals("item") && trophyTileEntity.item != null) {
-                renderItem(trophyTileEntity, poseStack, buffer, combinedLightIn, combinedOverlayIn);
-            } else if (trophyTileEntity.trophyType.equals("entity")) {
-                Entity entity = trophyTileEntity.getCachedEntity();
-                if (entity != null) {
-                    renderEntity(trophyTileEntity, poseStack, buffer, combinedLightIn);
+            state.itemBob = Math.sin(tick / 25f) / 15f;
+            state.itemSpin = (float) ((tick * 30.0D) % 360);
+            this.itemModelResolver.updateForTopItem(state.itemRenderState, be.item, ItemDisplayContext.FIXED, be.getLevel(), null, 0);
+        } else if ("entity".equals(be.trophyType)) {
+            Entity entity = be.getCachedEntity();
+            if (entity != null) {
+                state.isEnderDragon = be.entity != null && "minecraft:ender_dragon".equals(be.entity.getStringOr("entityType", ""));
+                state.facingAngle = switch (facing(be)) {
+                    case NORTH -> 180f;
+                    case EAST -> 90f;
+                    case WEST -> 270f;
+                    default -> 0f;
+                };
+                state.entityRenderState = this.entityRenderDispatcher.extractEntity(entity, partialTick);
+                state.entityRenderState.shadowRadius = 0;
+                try {
+                    extractPassengers(entity, state, partialTick);
+                } catch (Exception ignored) {
                 }
             }
         }
 
-        renderBase(trophyTileEntity, poseStack, buffer, combinedLightIn, combinedOverlayIn);
-    }
-
-    private void renderBase(TrophyBlockEntity trophyTileEntity, PoseStack poseStack, @Nonnull MultiBufferSource buffer, int combinedLightIn, int combinedOverlayIn) {
-        Block baseBlock = trophyTileEntity.isOnHead ? Blocks.AIR : trophyTileEntity.getBaseBlock();
-        if (baseBlock != null) {
-            Minecraft.getInstance().getBlockRenderer().renderSingleBlock(baseBlock.defaultBlockState(), poseStack, buffer, combinedLightIn, combinedOverlayIn);
-        }
-    }
-
-    private void renderItem(TrophyBlockEntity trophyBlockEntity, PoseStack poseStack, @Nonnull MultiBufferSource buffer, int combinedLightIn, int combinedOverlayIn) {
-        double tick = 0;
-        if (TrophyManagerConfig.GENERAL.rotateItemTrophies.get() && !(trophyBlockEntity.item.getItem() instanceof BlockItem)) {
-            tick = System.currentTimeMillis() / 800.0D;
-        } else {
-            if (trophyBlockEntity.getLevel() != null) {
-                Direction facing = trophyBlockEntity.getBlockState().getValue(HorizontalDirectionalBlock.FACING);
-                if (facing == Direction.NORTH) {
-                    tick = 6D;
-                } else if (facing == Direction.SOUTH) {
-                    tick = 0D;
-                } else if (facing == Direction.EAST) {
-                    tick = 3D;
-                } else if (facing == Direction.WEST) {
-                    tick = 9D;
-                }
+        if (!be.isOnHead) {
+            Block baseBlock = be.getBaseBlock();
+            if (baseBlock != null) {
+                state.hasBase = true;
+                this.blockModelResolver.update(state.baseModelState, baseBlock.defaultBlockState(), BASE_DISPLAY_CONTEXT);
             }
         }
-
-        poseStack.pushPose();
-        poseStack.translate(0.5f, trophyBlockEntity.offsetY + 0.5D + Math.sin(tick / 25f) / 15f, 0.5f);
-        poseStack.mulPose(Axis.YP.rotationDegrees((float) ((tick * 30.0D) % 360)));
-        poseStack.scale(trophyBlockEntity.scale, trophyBlockEntity.scale, trophyBlockEntity.scale);
-        if (trophyBlockEntity.item.getItem() instanceof BlockItem) {
-            poseStack.translate(0, -0.25f, 0);
-            poseStack.scale(3f, 3f, 3f);
-        }
-        Minecraft.getInstance().getItemRenderer().renderStatic(trophyBlockEntity.item, ItemDisplayContext.FIXED, combinedLightIn, combinedOverlayIn, poseStack, buffer, trophyBlockEntity.getLevel(), 0);
-        poseStack.popPose();
     }
 
-    private void renderEntity(TrophyBlockEntity trophyTileEntity, PoseStack poseStack, @Nonnull MultiBufferSource buffer, int combinedLightIn) {
-        float angle = 0;
-        if (trophyTileEntity.getLevel() != null) {
-            Direction facing = trophyTileEntity.getBlockState().getValue(HorizontalDirectionalBlock.FACING);
-            if (facing == Direction.NORTH) {
-                angle = 180f;
-            } else if (facing == Direction.SOUTH) {
-                angle = 0f;
-            } else if (facing == Direction.EAST) {
-                angle = 90f;
-            } else if (facing == Direction.WEST) {
-                angle = 270f;
+    private void extractPassengers(Entity vehicle, TrophyRenderState state, float partialTick) {
+        if (vehicle.isVehicle()) {
+            for (Entity rider : vehicle.getPassengers()) {
+                vehicle.positionRider(rider);
+                TrophyRenderState.Passenger p = new TrophyRenderState.Passenger();
+                p.offset = new Vec3(rider.getX() - vehicle.getX(), rider.getY() - vehicle.getY(), rider.getZ() - vehicle.getZ());
+                p.state = this.entityRenderDispatcher.extractEntity(rider, partialTick);
+                p.state.shadowRadius = 0;
+                state.passengers.add(p);
+                extractPassengers(rider, state, partialTick);
             }
         }
-
-        poseStack.pushPose();
-        poseStack.translate(0.5f, trophyTileEntity.offsetY, 0.5f);
-        poseStack.mulPose(Axis.YP.rotationDegrees(angle));
-        poseStack.mulPose(Axis.XP.rotationDegrees(trophyTileEntity.rotX));
-        poseStack.scale(trophyTileEntity.scale, trophyTileEntity.scale, trophyTileEntity.scale);
-
-        if (trophyTileEntity.entity.getString("entityType").equals("minecraft:ender_dragon")) {
-            poseStack.mulPose(Axis.XP.rotationDegrees(180f));
-            poseStack.mulPose(Axis.YP.rotationDegrees(180f));
-        }
-
-        EntityRenderDispatcher entityRendererManager = Minecraft.getInstance().getEntityRenderDispatcher();
-        entityRendererManager.setRenderShadow(false);
-        Entity cachedEntity = trophyTileEntity.getCachedEntity();
-        if (cachedEntity != null) {
-            try {
-                entityRendererManager.render(cachedEntity, 0, 0, 0., 1, 1, poseStack, buffer, combinedLightIn);
-                renderPassengers(cachedEntity, entityRendererManager, poseStack, buffer, combinedLightIn);
-                if (buffer instanceof MultiBufferSource.BufferSource bufferSource) {
-                    bufferSource.endBatch();
-                }
-            } catch (Exception e) {
-                // too bad
-            }
-        }
-
-        poseStack.popPose();
     }
 
-    private static void renderPassengers(Entity entity, EntityRenderDispatcher entityRendererManager, PoseStack matrixStack, MultiBufferSource buffer, int combinedLightIn) {
-        if (entity.isVehicle()) {
-            for(Entity rider : entity.getPassengers()) {
-                entity.positionRider(rider);
-                entityRendererManager.render(rider, rider.getX(), rider.getY(), rider.getZ(), Minecraft.getInstance().getFrameTimeNs(), 1, matrixStack, buffer, combinedLightIn);
-                renderPassengers(rider, entityRendererManager, matrixStack, buffer, combinedLightIn);
+    private static Direction facing(TrophyBlockEntity be) {
+        return be.getBlockState().getValue(HorizontalDirectionalBlock.FACING);
+    }
+
+    @Override
+    public void submit(TrophyRenderState state, @Nonnull PoseStack poseStack, @Nonnull SubmitNodeCollector collector, @Nonnull CameraRenderState cameraState) {
+        if (state.isOnHead) {
+            poseStack.translate(0, 0.4f, 0);
+        }
+
+        if (state.renderItem) {
+            poseStack.pushPose();
+            poseStack.translate(0.5f, state.offsetY + 0.5D + state.itemBob, 0.5f);
+            poseStack.mulPose(Axis.YP.rotationDegrees(state.itemSpin));
+            poseStack.scale(state.scale, state.scale, state.scale);
+            if (state.itemIsBlock) {
+                poseStack.translate(0, -0.25f, 0);
+                poseStack.scale(3f, 3f, 3f);
             }
+            state.itemRenderState.submit(poseStack, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+            poseStack.popPose();
+        } else if (state.entityRenderState != null) {
+            poseStack.pushPose();
+            poseStack.translate(0.5f, state.offsetY, 0.5f);
+            poseStack.mulPose(Axis.YP.rotationDegrees(state.facingAngle));
+            poseStack.mulPose(Axis.XP.rotationDegrees(state.rotX));
+            poseStack.scale(state.scale, state.scale, state.scale);
+            if (state.isEnderDragon) {
+                poseStack.mulPose(Axis.XP.rotationDegrees(180f));
+                poseStack.mulPose(Axis.YP.rotationDegrees(180f));
+            }
+            this.entityRenderDispatcher.submit(state.entityRenderState, cameraState, 0, 0, 0, poseStack, collector);
+            for (TrophyRenderState.Passenger p : state.passengers) {
+                poseStack.pushPose();
+                poseStack.translate(p.offset.x, p.offset.y, p.offset.z);
+                this.entityRenderDispatcher.submit(p.state, cameraState, 0, 0, 0, poseStack, collector);
+                poseStack.popPose();
+            }
+            poseStack.popPose();
+        }
+
+        if (state.hasBase) {
+            state.baseModelState.submit(poseStack, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
         }
     }
 
     @Override
-    public boolean shouldRenderOffScreen(TrophyBlockEntity pBlockEntity) {
+    public boolean shouldRenderOffScreen() {
         return true;
     }
 

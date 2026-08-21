@@ -1,0 +1,26 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [
+      {
+        "when": "head",
+        "model": {
+          "type": "minecraft:special",
+          "base": "trophymanager:item/trophy",
+          "model": {
+            "type": "trophymanager:trophy",
+            "on_head": true
+          }
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:special",
+      "base": "trophymanager:item/trophy",
+      "model": {
+        "type": "trophymanager:trophy"
+      }
+    }
+  }
+}

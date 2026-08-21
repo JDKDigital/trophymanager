@@ -1,20 +1,21 @@
 package cy.jdkdigital.trophymanager.common.entity;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class RenderPlayer extends Zombie
 {
+    static final EntityDataAccessor<String> DATA_UUID = SynchedEntityData.defineId(RenderPlayer.class, EntityDataSerializers.STRING);
+
     public RenderPlayer(EntityType<? extends Zombie> entityType, Level level) {
         super(entityType, level);
     }
-
-    static final EntityDataAccessor<String> DATA_UUID = SynchedEntityData.defineId(RenderPlayer.class, EntityDataSerializers.STRING);
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder pBuilder) {
@@ -31,19 +32,16 @@ public class RenderPlayer extends Zombie
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
-
-        if (tag.contains("uuid")) {
-            setUUIDData(tag.getString("uuid"));
-        }
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        setUUIDData(input.getStringOr("uuid", ""));
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
         if (!this.getUUIDData().isEmpty()) {
-            tag.putString("uuid", this.getUUIDData());
+            output.putString("uuid", this.getUUIDData());
         }
     }
 }

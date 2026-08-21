@@ -1,16 +1,11 @@
 package cy.jdkdigital.trophymanager.common.block;
 
-import com.google.gson.JsonObject;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
 import cy.jdkdigital.trophymanager.init.ModBlocks;
 import cy.jdkdigital.trophymanager.init.ModTags;
-//import cy.jdkdigital.trophymanager.network.Networking;
 import cy.jdkdigital.trophymanager.network.PacketOpenGui;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -18,23 +13,23 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvent;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -46,15 +41,14 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.level.redstone.Orientation;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Arrays;
 
 public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlock
 {
@@ -95,7 +89,7 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
 
     @Override
     public RenderShape getRenderShape(@Nonnull BlockState state) {
-        return RenderShape.ENTITYBLOCK_ANIMATED;
+        return RenderShape.INVISIBLE;
     }
 
     @Override
@@ -110,7 +104,6 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
 
     @Override
     public void setPlacedBy(Level level, @Nonnull BlockPos pos, @Nonnull BlockState state, @Nullable LivingEntity player, @Nonnull ItemStack stack) {
-        // Read data from stack
         BlockEntity tileEntity = level.getBlockEntity(pos);
         if (!level.isClientSide() && tileEntity instanceof TrophyBlockEntity && stack.has(DataComponents.CUSTOM_DATA)) {
             ((TrophyBlockEntity) tileEntity).loadData(stack.get(DataComponents.CUSTOM_DATA).copyTag(), level.registryAccess());
@@ -124,12 +117,12 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
     }
 
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state, boolean includeData, Player player) {
         ItemStack stack = new ItemStack(ModBlocks.TROPHY.get());
         if (level.getBlockEntity(pos) instanceof TrophyBlockEntity trophyTile && trophyTile.getLevel() != null) {
             try {
                 CompoundTag tag = trophyTile.saveWithoutMetadata(trophyTile.getLevel().registryAccess());
-                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag.getCompound("TrophyData")));
+                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag.getCompoundOrEmpty("TrophyData")));
             } catch (Exception e) {
                 // Crash can happen here if the server is shutting down as the client (WAILA) is trying to read the data
             }
@@ -138,55 +131,57 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack pStack, BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHitResult) {
-        if (pStack.getItem() instanceof BlockItem) {
-            Block heldBlock = ((BlockItem) pStack.getItem()).getBlock();
+    protected InteractionResult useItemOn(ItemStack pStack, BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHitResult) {
+        if (pStack.getItem() instanceof BlockItem blockItem) {
+            Block heldBlock = blockItem.getBlock();
             if (heldBlock.defaultBlockState().is(ModTags.TROPHY_BASE)) {
                 final BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-                if (blockEntity instanceof TrophyBlockEntity) {
-                    ((TrophyBlockEntity) blockEntity).baseBlock = BuiltInRegistries.BLOCK.getKey(heldBlock);
+                if (blockEntity instanceof TrophyBlockEntity trophyBlockEntity) {
+                    trophyBlockEntity.baseBlock = BuiltInRegistries.BLOCK.getKey(heldBlock);
                     if (!pLevel.isClientSide()) {
                         pLevel.setBlockAndUpdate(pPos, pState);
                     }
-                    return ItemInteractionResult.CONSUME;
+                    return InteractionResult.CONSUME;
                 }
             }
         }
 
-        if (pStack.getItem() instanceof ArmorItem) {
-            final BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (blockEntity instanceof TrophyBlockEntity) {
-                var res = ((TrophyBlockEntity) blockEntity).equipArmor(pStack);
-                if (!pLevel.isClientSide() && res.equals(ItemInteractionResult.CONSUME)) {
-                    pLevel.setBlockAndUpdate(pPos, pState);
-                }
-                return res;
-            }
+        Equippable equippable = pStack.get(DataComponents.EQUIPPABLE);
+        if (equippable != null && equippable.slot() != EquipmentSlot.MAINHAND && equippable.slot() != EquipmentSlot.OFFHAND) {
+            return tryEquip(pStack, pState, pLevel, pPos, equippable.slot());
         }
 
-        if (pStack.getItem() instanceof TieredItem || pStack.getItem() instanceof ShieldItem) {
-            final BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (blockEntity instanceof TrophyBlockEntity) {
-                var res = ((TrophyBlockEntity) blockEntity).equipTool(pStack);
-                if (!pLevel.isClientSide() && res.equals(ItemInteractionResult.CONSUME)) {
-                    pLevel.setBlockAndUpdate(pPos, pState);
-                }
-                return res;
-            }
+        if (pStack.getItem() instanceof ShieldItem) {
+            return tryEquip(pStack, pState, pLevel, pPos, EquipmentSlot.OFFHAND);
+        }
+
+        if (pStack.has(DataComponents.TOOL) || pStack.has(DataComponents.WEAPON)) {
+            return tryEquip(pStack, pState, pLevel, pPos, EquipmentSlot.MAINHAND);
         }
 
         return super.useItemOn(pStack, pState, pLevel, pPos, pPlayer, pHand, pHitResult);
     }
 
+    private InteractionResult tryEquip(ItemStack stack, BlockState state, Level level, BlockPos pos, EquipmentSlot slot) {
+        if (level.getBlockEntity(pos) instanceof TrophyBlockEntity trophyBlockEntity) {
+            InteractionResult res = trophyBlockEntity.equip(stack, slot);
+            if (!level.isClientSide() && res.equals(InteractionResult.CONSUME)) {
+                level.setBlockAndUpdate(pos, state);
+            }
+            return res;
+        }
+        return InteractionResult.PASS;
+    }
+
     @Override
     protected InteractionResult useWithoutItem(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, BlockHitResult pHitResult) {
-        if (TrophyManagerConfig.GENERAL.allowNonOpEdit.get() || pPlayer.hasPermissions(2)) {
+        if (TrophyManagerConfig.GENERAL.allowNonOpEdit.get() || pPlayer.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
             final BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
             if (blockEntity instanceof TrophyBlockEntity) {
                 if (pPlayer instanceof ServerPlayer serverPlayer) {
                     PacketDistributor.sendToPlayer(serverPlayer, new PacketOpenGui(blockEntity.getBlockPos()));
                 }
-                return InteractionResult.sidedSuccess(pLevel.isClientSide());
+                return InteractionResult.SUCCESS;
             }
         }
 
@@ -194,13 +189,13 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos otherPos, boolean condition) {
-        if (!level.isClientSide) {
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, @Nullable Orientation orientation, boolean movedByPiston) {
+        if (!level.isClientSide()) {
             if (level.hasNeighborSignal(pos)) {
                 BlockEntity te = level.getBlockEntity(pos);
-                if (te instanceof TrophyBlockEntity) {
-                    if (((TrophyBlockEntity) te).trophyType.equals("entity")) {
-                        String entity = ((TrophyBlockEntity) te).entity.getString("entityType");
+                if (te instanceof TrophyBlockEntity trophyBlockEntity) {
+                    if (trophyBlockEntity.trophyType.equals("entity") && trophyBlockEntity.entity != null) {
+                        String entity = trophyBlockEntity.entity.getStringOr("entityType", "");
                         switch (entity) {
                             case "minecraft:creeper":
                                 level.playSound(null, pos, SoundEvents.CREEPER_PRIMED, SoundSource.HOSTILE, 1.0F, 1.0F);
@@ -231,7 +226,7 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
                                 break;
                             case "minecraft:llama":
                             case "minecraft:trader_llama":
-                                if (level.random.nextInt(10) == 1) {
+                                if (level.getRandom().nextInt(10) == 1) {
                                     level.playSound(null, pos, SoundEvents.LLAMA_SPIT, SoundSource.HOSTILE, 1.0F, 1.0F);
                                     break;
                                 }
@@ -240,27 +235,20 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
                                 level.playSound(null, pos, SoundEvents.GENERIC_SPLASH, SoundSource.HOSTILE, 1.0F, 1.0F);
                                 break;
                             case "minecraft:ghast":
-                                if (level.random.nextInt(10) == 1) {
+                                if (level.getRandom().nextInt(10) == 1) {
                                     level.playSound(null, pos, SoundEvents.GHAST_SHOOT, SoundSource.HOSTILE, 1.0F, 1.0F);
                                 } else {
                                     level.playSound(null, pos, SoundEvents.GHAST_WARN, SoundSource.HOSTILE, 1.0F, 1.0F);
                                 }
                                 break;
                             case "minecraft:goat":
-                                if (level.random.nextInt(2) == 1) {
+                                if (level.getRandom().nextInt(2) == 1) {
                                     level.playSound(null, pos, SoundEvents.GOAT_SCREAMING_AMBIENT, SoundSource.NEUTRAL, 1.0F, 1.0F);
                                 } else {
                                     level.playSound(null, pos, SoundEvents.GOAT_AMBIENT, SoundSource.NEUTRAL, 1.0F, 1.0F);
                                 }
                                 break;
                             default:
-                                Entity e = ((TrophyBlockEntity) te).getCachedEntity();
-                                if (e instanceof Mob) {
-                                    SoundEvent sound = ((Mob) e).getAmbientSound();
-                                    if (sound != null) {
-                                        level.playSound(null, pos, sound, SoundSource.HOSTILE, 1.0F, 1.0F);
-                                    }
-                                }
                                 break;
                         }
                     }
@@ -291,13 +279,12 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
     }
 
     public static ItemStack createTrophy(Holder<EntityType<?>> entityType, CompoundTag tag, String name) {
-        String entityId = entityType.getKey().location().toString();
+        String entityId = entityType.getRegisteredName();
         if (entityId == null || entityId.isEmpty()) {
             return ItemStack.EMPTY;
         }
         CompoundTag entityTag = new CompoundTag();
         var data = entityType.getData(TrophyManager.NBT_MAP);
-//        TrophyManager.LOGGER.info("create trophy for " + entityId + " from " + tag);
         if (data != null) {
             data.nbtKeys().forEach(key -> {
                 if (tag.contains(key)) {
@@ -307,17 +294,15 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
         }
 
         if (tag.contains("CustomName")) {
-            entityTag.putString("CustomName", tag.getString("CustomName"));
+            entityTag.putString("CustomName", tag.getStringOr("CustomName", ""));
         }
 
         CompoundTag trophyTag = new CompoundTag();
         ItemStack trophy = new ItemStack(ModBlocks.TROPHY.get());
         trophyTag.putString("TrophyType", "entity");
         entityTag.putString("entityType", entityId);
-        if (tag.contains("Age")) {
-            if (tag.getInt("Age") < 0) {
-                entityTag.putInt("Age", -1);
-            }
+        if (tag.contains("Age") && tag.getIntOr("Age", 0) < 0) {
+            entityTag.putInt("Age", -1);
         }
 
         var defaultProperties = entityType.getData(TrophyManager.PROPERTIES_MAP);
@@ -343,7 +328,7 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
         CompoundTag trophyTag = new CompoundTag();
         ItemStack trophy = new ItemStack(ModBlocks.TROPHY.get());
         trophyTag.putString("TrophyType", "item");
-        trophyTag.put("TrophyItem", stack.save(level.registryAccess()));
+        trophyTag.put("TrophyItem", ItemStack.CODEC.encodeStart(level.registryAccess().createSerializationContext(NbtOps.INSTANCE), stack).getOrThrow());
         trophyTag.putString("Name", name + " Trophy");
 
         trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));

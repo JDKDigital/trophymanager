@@ -1,42 +1,52 @@
 package cy.jdkdigital.trophymanager.common.blockentity;
 
+import com.mojang.logging.LogUtils;
 import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
-import cy.jdkdigital.trophymanager.compat.CobblemonCompat;
 import cy.jdkdigital.trophymanager.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityEquipment;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.NeutralMob;
-import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.item.*;
+import net.minecraft.world.entity.monster.Shulker;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class TrophyBlockEntity extends BlockEntity
 {
+    private static final Logger LOGGER = LogUtils.getLogger();
     public static final Map<Integer, Entity> cachedEntities = new HashMap<>();
 
     public String trophyType = "item"; // item, entity
@@ -45,7 +55,7 @@ public class TrophyBlockEntity extends BlockEntity
     public double offsetY = 0.0D;
     public float rotX = 0.0F;
     public float scale = 1.0F;
-    public ResourceLocation baseBlock;
+    public Identifier baseBlock;
     public boolean isOnHead = false;
     private String name = "";
 
@@ -53,110 +63,75 @@ public class TrophyBlockEntity extends BlockEntity
         super(ModBlockEntities.TROPHY.get(), pos, state);
     }
 
-//    @Override
-//    public AABB getRenderBoundingBox() {
-//        BlockPos pos = getBlockPos();
-//        return new AABB(pos, pos.offset(1, 2, 1));
-//    }
-
     @Override
-    protected void loadAdditional(CompoundTag pTag, HolderLookup.Provider pRegistries) {
-        super.loadAdditional(pTag, pRegistries);
-
-        loadData(pTag.getCompound("TrophyData"), pRegistries);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        CompoundTag trophyTag = input.read("TrophyData", CompoundTag.CODEC).orElseGet(CompoundTag::new);
+        loadData(trophyTag, input.lookup());
     }
 
     @Override
-    protected void saveAdditional(CompoundTag pTag, HolderLookup.Provider pRegistries) {
-        super.saveAdditional(pTag, pRegistries);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
 
-        CompoundTag trophyTag = new CompoundTag();
-
-        trophyTag.putString("TrophyType", trophyType);
-
-        if (item != null) {
-            trophyTag.put("TrophyItem", item.save(pRegistries, new CompoundTag()));
+        ValueOutput trophy = output.child("TrophyData");
+        trophy.putString("TrophyType", trophyType);
+        if (item != null && !item.isEmpty()) {
+            trophy.store("TrophyItem", ItemStack.CODEC, item);
         }
-
         if (entity != null) {
-            trophyTag.put("TrophyEntity", entity);
+            trophy.store("TrophyEntity", CompoundTag.CODEC, entity);
         }
-
-        trophyTag.putDouble("OffsetY", offsetY);
-        trophyTag.putFloat("RotX", rotX);
-        trophyTag.putFloat("Scale", scale);
+        trophy.putDouble("OffsetY", offsetY);
+        trophy.putFloat("RotX", rotX);
+        trophy.putFloat("Scale", scale);
         if (baseBlock != null) {
-            trophyTag.putString("BaseBlock", baseBlock.toString());
+            trophy.putString("BaseBlock", baseBlock.toString());
         }
         if (name != null) {
-            trophyTag.putString("Name", name);
+            trophy.putString("Name", name);
         }
-
-        pTag.put("TrophyData", trophyTag);
     }
 
     public void loadData(CompoundTag tag, HolderLookup.Provider pRegistries) {
-        this.trophyType = tag.contains("TrophyType") ? tag.getString("TrophyType") : "item";
+        this.trophyType = tag.getStringOr("TrophyType", "item");
 
         if (tag.contains("TrophyItem")) {
-            CompoundTag itemTag = tag.getCompound("TrophyItem");
-            if (!itemTag.contains("Count")) {
-                itemTag.putDouble("Count", 1D);
-            }
-            this.item = ItemStack.parse(pRegistries, itemTag).orElse(ItemStack.EMPTY);
+            this.item = ItemStack.OPTIONAL_CODEC.parse(pRegistries.createSerializationContext(NbtOps.INSTANCE), tag.getCompoundOrEmpty("TrophyItem")).result().orElse(ItemStack.EMPTY);
         } else if (this.trophyType.equals("item")) {
-            // Default
             this.item = new ItemStack(Items.ENCHANTED_GOLDEN_APPLE);
         }
 
         if (tag.contains("TrophyEntity")) {
-            this.entity = tag.getCompound("TrophyEntity");
+            this.entity = tag.getCompoundOrEmpty("TrophyEntity");
         }
 
-        if (tag.contains("Scale")) {
-            this.scale = tag.getFloat("Scale");
-        } else {
-            this.scale = TrophyManagerConfig.GENERAL.defaultScale.get().floatValue();
-        }
-
-        if (tag.contains("RotX")) {
-            this.rotX = tag.getFloat("RotX");
-        } else {
-            this.rotX = 0.0f;
-        }
-
-        if (tag.contains("OffsetY")) {
-            this.offsetY = tag.getDouble("OffsetY");
-        } else {
-            this.offsetY = TrophyManagerConfig.GENERAL.defaultYOffset.get();
-        }
-
-        if (tag.contains("BaseBlock")) {
-            this.baseBlock = ResourceLocation.parse(tag.getString("BaseBlock"));
-        } else {
-            this.baseBlock = ResourceLocation.parse(TrophyManagerConfig.GENERAL.defaultBaseBlock.get());
-        }
+        this.scale = tag.contains("Scale") ? tag.getFloatOr("Scale", 1.0F) : TrophyManagerConfig.GENERAL.defaultScale.get().floatValue();
+        this.rotX = tag.getFloatOr("RotX", 0.0F);
+        this.offsetY = tag.contains("OffsetY") ? tag.getDoubleOr("OffsetY", 0.0D) : TrophyManagerConfig.GENERAL.defaultYOffset.get();
+        this.baseBlock = Identifier.parse(tag.contains("BaseBlock") ? tag.getStringOr("BaseBlock", "") : TrophyManagerConfig.GENERAL.defaultBaseBlock.get());
 
         if (tag.contains("Name")) {
-            this.name = tag.getString("Name");
+            this.name = tag.getStringOr("Name", "");
         }
     }
 
     public Entity getCachedEntity() {
         return getCachedEntity(false);
     }
+
     public Entity getCachedEntity(boolean forceRefresh) {
         if (entity != null) {
             int key = entity.hashCode();
             if (!cachedEntities.containsKey(key) || forceRefresh) {
                 Entity cachedEntity = createEntity(level, entity);
                 if (cachedEntity != null) {
-                    if (cachedEntity instanceof NeutralMob && entity.contains("AngerTime")) {
-                        ((NeutralMob) cachedEntity).setRemainingPersistentAngerTime(entity.getInt("AngerTime"));
-                    } else if (cachedEntity instanceof Shulker && entity.contains("Peek")) {
-                        float peek = Mth.clamp(entity.getByte("Peek") * 0.01F, 0.0F, 1.0F);
-                        ((Shulker) cachedEntity).currentPeekAmount = peek;
-                        ((Shulker) cachedEntity).currentPeekAmountO = peek;
+                    if (cachedEntity instanceof NeutralMob neutralMob && entity.contains("AngerTime")) {
+                        neutralMob.setTimeToRemainAngry(entity.getIntOr("AngerTime", 0));
+                    } else if (cachedEntity instanceof Shulker shulker && entity.contains("Peek")) {
+                        float peek = Mth.clamp(entity.getByteOr("Peek", (byte) 0) * 0.01F, 0.0F, 1.0F);
+                        shulker.currentPeekAmount = peek;
+                        shulker.currentPeekAmountO = peek;
                     }
                     try {
                         addPassengers(cachedEntity, entity);
@@ -166,12 +141,7 @@ public class TrophyBlockEntity extends BlockEntity
                 } else {
                     TrophyManager.LOGGER.info("Unable to create trophy entity " + entity);
                 }
-                try {
-                    addPassengers(cachedEntity, entity);
-                } catch (Exception e) {
-                    // user can fuck it up here, so don't crash
-                }
-                TrophyBlockEntity.cachedEntities.put(key, cachedEntity);
+                cachedEntities.put(key, cachedEntity);
             }
             return cachedEntities.getOrDefault(key, null);
         }
@@ -179,28 +149,27 @@ public class TrophyBlockEntity extends BlockEntity
     }
 
     private static Entity createEntity(Level level, CompoundTag tag) {
-        return createEntity(level, tag.getString("entityType"), tag);
+        return createEntity(level, tag.getStringOr("entityType", ""), tag);
     }
 
     private static Entity createEntity(Level level, String entityType, CompoundTag tag) {
         EntityType<?> type = EntityType.byString(entityType).orElse(null);
         if (type != null) {
             try {
-                Entity loadedEntity;
                 if (ModList.get().isLoaded("cobblemon") && entityType.contains("cobblemon:")) {
-                    return CobblemonCompat.create(level, tag);
-                } else {
-                    loadedEntity = type.create(level);
-                    if (loadedEntity != null) {
-                        loadedEntity.load(tag);
-                        return loadedEntity;
+                    return null;
+                }
+                Entity loadedEntity = type.create(level, EntitySpawnReason.NATURAL);
+                if (loadedEntity != null) {
+                    try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(loadedEntity.problemPath(), LOGGER)) {
+                        loadedEntity.load(TagValueInput.create(reporter, level.registryAccess(), tag));
                     }
+                    return loadedEntity;
                 }
             } catch (Exception e) {
                 TrophyManager.LOGGER.warn("Unable to load trophy entity " + entityType + ". Please report it to the mod author at https://github.com/JDKDigital/trophymanager/issues");
                 TrophyManager.LOGGER.warn("Error: " + e.getMessage());
                 TrophyManager.LOGGER.warn("Tag: " + tag);
-                e.printStackTrace();
                 return null;
             }
         }
@@ -209,10 +178,10 @@ public class TrophyBlockEntity extends BlockEntity
 
     private static void addPassengers(Entity vehicle, CompoundTag entityTag) {
         if (entityTag.contains("Passengers")) {
-            ListTag passengers = entityTag.getList("Passengers", 10);
+            ListTag passengers = entityTag.getListOrEmpty("Passengers");
             for (int l = 0; l < passengers.size(); ++l) {
-                CompoundTag riderTag = passengers.getCompound(l);
-                Entity rider = createEntity(vehicle.level(), riderTag.getString("id"), riderTag);
+                CompoundTag riderTag = passengers.getCompoundOrEmpty(l);
+                Entity rider = createEntity(vehicle.level(), riderTag.getStringOr("id", ""), riderTag);
                 if (rider != null) {
                     rider.startRiding(vehicle);
                     addPassengers(rider, riderTag);
@@ -222,7 +191,7 @@ public class TrophyBlockEntity extends BlockEntity
     }
 
     public Block getBaseBlock() {
-        return BuiltInRegistries.BLOCK.get(baseBlock);
+        return baseBlock == null ? null : BuiltInRegistries.BLOCK.get(baseBlock).map(Holder::value).orElse(null);
     }
 
     @Nullable
@@ -232,8 +201,8 @@ public class TrophyBlockEntity extends BlockEntity
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider lookupProvider) {
-        handleUpdateTag(pkt.getTag(), lookupProvider);
+    public void onDataPacket(Connection net, ValueInput input) {
+        super.onDataPacket(net, input);
     }
 
     @Override
@@ -241,85 +210,35 @@ public class TrophyBlockEntity extends BlockEntity
         return saveWithoutMetadata(lookupProvider);
     }
 
-    public ItemInteractionResult equipArmor(ItemStack heldItem) {
-        if (!canEquip(getCachedEntity()) || level == null) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    public InteractionResult equip(ItemStack heldItem, EquipmentSlot slot) {
+        if (!canEquip(getCachedEntity()) || level == null || entity == null) {
+            return InteractionResult.PASS;
         }
 
-        // Read existing armor items into list
-        ListTag armorList = entity.contains("ArmorItems") ? entity.getList("ArmorItems", 10) : new ListTag();
-        NonNullList<ItemStack> armorItems = NonNullList.withSize(4, ItemStack.EMPTY);
-        for(int l = 0; l < armorItems.size(); ++l) {
-            armorItems.set(l, ItemStack.parse(level.registryAccess(), armorList.getCompound(l)).orElse(ItemStack.EMPTY));
-        }
-        // Add or remove new armor item
-        Item armorItem = heldItem.getItem();
-        if (armorItem instanceof ArmorItem) {
-            int slot = ((ArmorItem) armorItem).getEquipmentSlot().getIndex();
-            if (armorItems.get(slot).getItem().equals(armorItem)) {
-                armorItems.set(slot, ItemStack.EMPTY);
-            } else {
-                armorItems.set(slot, heldItem);
-            }
-        }
+        var ops = level.registryAccess().createSerializationContext(NbtOps.INSTANCE);
+        EntityEquipment equipment = entity.getCompound("equipment")
+                .flatMap(t -> EntityEquipment.CODEC.parse(ops, t).result())
+                .orElseGet(EntityEquipment::new);
 
-        // Save armor list in NBT
-        ListTag listnbt = new ListTag();
-        CompoundTag compoundnbt;
-        for(Iterator<ItemStack> var3 = armorItems.iterator(); var3.hasNext(); listnbt.add(compoundnbt)) {
-            ItemStack itemstack = var3.next();
-            compoundnbt = new CompoundTag();
-            if (!itemstack.isEmpty()) {
-                itemstack.save(level.registryAccess(), compoundnbt);
-            }
-        }
-
-        entity.put("ArmorItems", listnbt);
-
-        if (level instanceof ServerLevel) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-        }
-
-        return ItemInteractionResult.CONSUME;
-    }
-
-    public ItemInteractionResult equipTool(ItemStack heldItem) {
-        if (!canEquip(getCachedEntity()) || level == null) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        }
-
-        // Read existing armor items into list
-        ListTag handList = entity.contains("HandItems") ? entity.getList("HandItems", 10) : new ListTag();
-        NonNullList<ItemStack> handItems = NonNullList.withSize(2, ItemStack.EMPTY);
-        for(int l = 0; l < handItems.size(); ++l) {
-            handItems.set(l, ItemStack.parse(level.registryAccess(), handList.getCompound(l)).orElse(ItemStack.EMPTY));
-        }
-        // Add or remove equipment
-        int slot = heldItem.getItem() instanceof ShieldItem ? 1 : 0;
-        if (handItems.get(slot).getItem().equals(heldItem.getItem())) {
-            handItems.set(slot, ItemStack.EMPTY);
+        if (ItemStack.isSameItem(equipment.get(slot), heldItem)) {
+            equipment.set(slot, ItemStack.EMPTY);
         } else {
-            handItems.set(slot, heldItem);
+            equipment.set(slot, heldItem.copyWithCount(1));
         }
 
-        // Save list in NBT
-        ListTag listnbt = new ListTag();
-        CompoundTag compoundnbt;
-        for(Iterator<ItemStack> var3 = handItems.iterator(); var3.hasNext(); listnbt.add(compoundnbt)) {
-            ItemStack itemstack = var3.next();
-            compoundnbt = new CompoundTag();
-            if (!itemstack.isEmpty()) {
-                itemstack.save(level.registryAccess(), compoundnbt);
-            }
+        if (equipment.isEmpty()) {
+            entity.remove("equipment");
+        } else {
+            entity.put("equipment", EntityEquipment.CODEC.encodeStart(ops, equipment).getOrThrow());
         }
 
-        entity.put("HandItems", listnbt);
+        getCachedEntity(true);
 
         if (level instanceof ServerLevel) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
 
-        return ItemInteractionResult.CONSUME;
+        return InteractionResult.CONSUME;
     }
 
     private boolean canEquip(Entity cachedEntity) {
