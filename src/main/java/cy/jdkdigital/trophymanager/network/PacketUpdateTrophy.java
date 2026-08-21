@@ -33,6 +33,9 @@ public record PacketUpdateTrophy(BlockPos pos, CompoundTag tag) implements Custo
         if (context.player().level().getBlockEntity(data.pos()) instanceof TrophyBlockEntity trophyBlockEntity) {
             trophyBlockEntity.offsetY = Math.min(data.tag().getDoubleOr("OffsetY", 0.0D), TrophyManagerConfig.GENERAL.maxYOffset.get());
             trophyBlockEntity.scale = (float) Math.min(data.tag().getFloatOr("Scale", 1.0F), TrophyManagerConfig.GENERAL.maxSize.get());
+            trophyBlockEntity.rotX = wrapDegrees(data.tag().getFloatOr("RotX", 0.0F));
+            trophyBlockEntity.rotY = wrapDegrees(data.tag().getFloatOr("RotY", 0.0F));
+            trophyBlockEntity.rotZ = wrapDegrees(data.tag().getFloatOr("RotZ", 0.0F));
             if (data.tag().contains("PoseType") && trophyBlockEntity.entity != null) {
                 trophyBlockEntity.entity.putString("PoseType", data.tag().getStringOr("PoseType", ""));
             }
@@ -40,6 +43,13 @@ public record PacketUpdateTrophy(BlockPos pos, CompoundTag tag) implements Custo
             trophyBlockEntity.setChanged();
             context.player().level().sendBlockUpdated(data.pos(), trophyBlockEntity.getBlockState(), trophyBlockEntity.getBlockState(), Block.UPDATE_CLIENTS);
         }
+    }
+
+    private static float wrapDegrees(float degrees) {
+        if (!Float.isFinite(degrees)) {
+            return 0.0F;
+        }
+        return ((degrees % 360.0F) + 360.0F) % 360.0F;
     }
 
     @Override

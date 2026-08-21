@@ -3,9 +3,11 @@ package cy.jdkdigital.trophymanager.client.gui;
 import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
+import cy.jdkdigital.trophymanager.common.datamap.PropertiesMap;
 import cy.jdkdigital.trophymanager.network.PacketUpdateTrophy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -13,8 +15,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 public class TrophyScreen extends Screen
 {
@@ -23,10 +29,22 @@ public class TrophyScreen extends Screen
     private static final Identifier GUI = Identifier.fromNamespaceAndPath(TrophyManager.MODID, "textures/gui/trophy.png");
     private final TrophyBlockEntity trophy;
 
+    private final double initialOffsetY;
+    private final float initialScale;
+    private final float initialRotX;
+    private final float initialRotY;
+    private final float initialRotZ;
+
     protected TrophyScreen(BlockPos pos) {
         super(Component.translatable("gui.trophy.screen"));
         Level level = Minecraft.getInstance().level;
         trophy = (TrophyBlockEntity) level.getBlockEntity(pos);
+
+        initialOffsetY = trophy.offsetY;
+        initialScale = trophy.scale;
+        initialRotX = trophy.rotX;
+        initialRotY = trophy.rotY;
+        initialRotZ = trophy.rotZ;
     }
 
     @Override
@@ -40,8 +58,12 @@ public class TrophyScreen extends Screen
         addRenderableWidget(Button.builder(Component.literal("-"), button -> adjustOffsetY(-1)).pos(relX + 10, relY + 35).size(20, 20).build());
         addRenderableWidget(Button.builder(Component.literal("+"), button -> adjustOffsetY(1)).pos(relX + 120, relY + 35).size(20, 20).build());
 
-        addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> close()).pos(relX + 10, relY + 60).size(65, 20).build());
-        addRenderableWidget(Button.builder(Component.translatable("gui.apply"), button -> save(this)).pos(relX + 76, relY + 60).size(65, 20).build());
+        addRenderableWidget(new RotationSlider(relX + 10, relY + 58, 130, "X", trophy.rotX, v -> trophy.rotX = v));
+        addRenderableWidget(new RotationSlider(relX + 10, relY + 80, 130, "Y", trophy.rotY, v -> trophy.rotY = v));
+        addRenderableWidget(new RotationSlider(relX + 10, relY + 102, 130, "Z", trophy.rotZ, v -> trophy.rotZ = v));
+
+        addRenderableWidget(Button.builder(Component.translatable("gui.trophy.reset"), button -> reset()).pos(relX + 10, relY + 125).size(65, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("gui.ok"), button -> onClose()).pos(relX + 76, relY + 125).size(65, 20).build());
     }
 
     @Override
@@ -59,13 +81,50 @@ public class TrophyScreen extends Screen
 
         int relX = (this.width - WIDTH) / 2;
         int relY = (this.height - HEIGHT) / 2;
-        graphics.centeredText(font, "" + trophy.scale, relX + 75, relY + 15, 0xFFE0E0E0);
-        graphics.centeredText(font, "" + trophy.offsetY, relX + 75, relY + 40, 0xFFE0E0E0);
+        graphics.centeredText(font, Component.translatable("gui.trophy.size", trophy.scale), relX + 75, relY + 15, 0xFFE0E0E0);
+        graphics.centeredText(font, Component.translatable("gui.trophy.offset", trophy.offsetY), relX + 75, relY + 40, 0xFFE0E0E0);
     }
 
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+
+        if (trophy.offsetY == initialOffsetY && trophy.scale == initialScale
+                && trophy.rotX == initialRotX && trophy.rotY == initialRotY && trophy.rotZ == initialRotZ) {
+            return;
+        }
+
+        CompoundTag tag = new CompoundTag();
+        tag.putDouble("OffsetY", trophy.offsetY);
+        tag.putFloat("Scale", trophy.scale);
+        tag.putFloat("RotX", trophy.rotX);
+        tag.putFloat("RotY", trophy.rotY);
+        tag.putFloat("RotZ", trophy.rotZ);
+        ClientPacketDistributor.sendToServer(new PacketUpdateTrophy(trophy.getBlockPos(), tag));
+    }
+
+    private void reset() {
+        PropertiesMap defaults = defaultProperties();
+        trophy.scale = defaults != null ? defaults.scale() : TrophyManagerConfig.GENERAL.defaultScale.get().floatValue();
+        trophy.offsetY = defaults != null ? defaults.yOffset() : TrophyManagerConfig.GENERAL.defaultYOffset.get();
+        trophy.rotX = defaults != null ? defaults.rotX() : 0.0F;
+        trophy.rotY = 0.0F;
+        trophy.rotZ = 0.0F;
+        rebuildWidgets();
+    }
+
+    private @Nullable PropertiesMap defaultProperties() {
+        if (trophy.entity == null) {
+            return null;
+        }
+        return EntityType.byString(trophy.entity.getStringOr("entityType", ""))
+                .map(type -> type.builtInRegistryHolder().getData(TrophyManager.PROPERTIES_MAP))
+                .orElse(null);
     }
 
     private void adjustScale(float d) {
@@ -98,15 +157,30 @@ public class TrophyScreen extends Screen
         Minecraft.getInstance().setScreen(new TrophyScreen(pos));
     }
 
-    public static void save(TrophyScreen screen) {
-        CompoundTag tag = new CompoundTag();
-        tag.putDouble("OffsetY", screen.trophy.offsetY);
-        tag.putFloat("Scale", screen.trophy.scale);
-        ClientPacketDistributor.sendToServer(new PacketUpdateTrophy(screen.trophy.getBlockPos(), tag));
-        close();
-    }
+    private static class RotationSlider extends AbstractSliderButton
+    {
+        private final String axis;
+        private final Consumer<Float> apply;
 
-    public static void close() {
-        Minecraft.getInstance().setScreen(null);
+        private RotationSlider(int x, int y, int width, String axis, float degrees, Consumer<Float> apply) {
+            super(x, y, width, 20, Component.empty(), degrees / 360.0D);
+            this.axis = axis;
+            this.apply = apply;
+            updateMessage();
+        }
+
+        private int degrees() {
+            return (int) Math.round(this.value * 360.0D) % 360;
+        }
+
+        @Override
+        protected void updateMessage() {
+            setMessage(Component.translatable("gui.trophy.rotation", axis, degrees()));
+        }
+
+        @Override
+        protected void applyValue() {
+            apply.accept((float) degrees());
+        }
     }
 }

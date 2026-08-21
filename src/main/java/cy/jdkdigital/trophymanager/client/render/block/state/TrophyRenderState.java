@@ -14,6 +14,8 @@ public class TrophyRenderState extends BlockEntityRenderState
     public boolean isOnHead;
     public double offsetY;
     public float rotX;
+    public float rotY;
+    public float rotZ;
     public float scale = 1.0F;
 
     public boolean renderItem;

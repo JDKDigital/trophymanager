@@ -54,6 +54,8 @@ public class TrophyBlockEntity extends BlockEntity
     public CompoundTag entity = null;
     public double offsetY = 0.0D;
     public float rotX = 0.0F;
+    public float rotY = 0.0F;
+    public float rotZ = 0.0F;
     public float scale = 1.0F;
     public Identifier baseBlock;
     public boolean isOnHead = false;
@@ -84,6 +86,8 @@ public class TrophyBlockEntity extends BlockEntity
         }
         trophy.putDouble("OffsetY", offsetY);
         trophy.putFloat("RotX", rotX);
+        trophy.putFloat("RotY", rotY);
+        trophy.putFloat("RotZ", rotZ);
         trophy.putFloat("Scale", scale);
         if (baseBlock != null) {
             trophy.putString("BaseBlock", baseBlock.toString());
@@ -108,6 +112,8 @@ public class TrophyBlockEntity extends BlockEntity
 
         this.scale = tag.contains("Scale") ? tag.getFloatOr("Scale", 1.0F) : TrophyManagerConfig.GENERAL.defaultScale.get().floatValue();
         this.rotX = tag.getFloatOr("RotX", 0.0F);
+        this.rotY = tag.getFloatOr("RotY", 0.0F);
+        this.rotZ = tag.getFloatOr("RotZ", 0.0F);
         this.offsetY = tag.contains("OffsetY") ? tag.getDoubleOr("OffsetY", 0.0D) : TrophyManagerConfig.GENERAL.defaultYOffset.get();
         this.baseBlock = Identifier.parse(tag.contains("BaseBlock") ? tag.getStringOr("BaseBlock", "") : TrophyManagerConfig.GENERAL.defaultBaseBlock.get());
 

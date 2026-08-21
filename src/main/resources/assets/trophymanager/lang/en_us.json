@@ -1,5 +1,8 @@
 {
-    "gui.apply": "Apply",
     "block.trophymanager.trophy": "Trophy",
-    "trophymanager.tooltip.trophy.scale": "Scale: %s"
+    "trophymanager.tooltip.trophy.scale": "Scale: %s",
+    "gui.trophy.rotation": "%s: %s°",
+    "gui.trophy.size": "Size: %s",
+    "gui.trophy.offset": "Y Offset: %s",
+    "gui.trophy.reset": "Reset"
 }

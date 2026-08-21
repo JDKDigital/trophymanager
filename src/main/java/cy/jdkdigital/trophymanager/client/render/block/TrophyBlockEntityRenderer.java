@@ -58,6 +58,8 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         state.isOnHead = be.isOnHead;
         state.offsetY = be.offsetY;
         state.rotX = be.rotX;
+        state.rotY = be.rotY;
+        state.rotZ = be.rotZ;
         state.scale = be.scale;
         state.renderItem = false;
         state.entityRenderState = null;
@@ -137,7 +139,9 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         if (state.renderItem) {
             poseStack.pushPose();
             poseStack.translate(0.5f, state.offsetY + 0.5D + state.itemBob, 0.5f);
-            poseStack.mulPose(Axis.YP.rotationDegrees(state.itemSpin));
+            poseStack.mulPose(Axis.YP.rotationDegrees(state.itemSpin + state.rotY));
+            poseStack.mulPose(Axis.XP.rotationDegrees(state.rotX));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(state.rotZ));
             poseStack.scale(state.scale, state.scale, state.scale);
             if (state.itemIsBlock) {
                 poseStack.translate(0, -0.25f, 0);
@@ -148,8 +152,9 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         } else if (state.entityRenderState != null) {
             poseStack.pushPose();
             poseStack.translate(0.5f, state.offsetY, 0.5f);
-            poseStack.mulPose(Axis.YP.rotationDegrees(state.facingAngle));
+            poseStack.mulPose(Axis.YP.rotationDegrees(state.facingAngle + state.rotY));
             poseStack.mulPose(Axis.XP.rotationDegrees(state.rotX));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(state.rotZ));
             poseStack.scale(state.scale, state.scale, state.scale);
             if (state.isEnderDragon) {
                 poseStack.mulPose(Axis.XP.rotationDegrees(180f));

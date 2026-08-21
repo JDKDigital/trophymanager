@@ -102,7 +102,9 @@ public class TrophyBlockItemRenderer implements SpecialModelRenderer<CompoundTag
 
         poseStack.pushPose();
         poseStack.translate(0.5f, scratch.offsetY + 0.5D + Math.sin(tick / 25f) / 15f, 0.5f);
-        poseStack.mulPose(Axis.YP.rotationDegrees((float) ((tick * 30.0D) % 360)));
+        poseStack.mulPose(Axis.YP.rotationDegrees((float) ((tick * 30.0D) % 360) + scratch.rotY));
+        poseStack.mulPose(Axis.XP.rotationDegrees(scratch.rotX));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(scratch.rotZ));
         poseStack.scale(scratch.scale, scratch.scale, scratch.scale);
         if (isBlock) {
             poseStack.translate(0, -0.25f, 0);
@@ -123,8 +125,9 @@ public class TrophyBlockItemRenderer implements SpecialModelRenderer<CompoundTag
 
         poseStack.pushPose();
         poseStack.translate(0.5f, scratch.offsetY, 0.5f);
-        poseStack.mulPose(Axis.YP.rotationDegrees(180f));
+        poseStack.mulPose(Axis.YP.rotationDegrees(180f + scratch.rotY));
         poseStack.mulPose(Axis.XP.rotationDegrees(scratch.rotX));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(scratch.rotZ));
         poseStack.scale(scratch.scale, scratch.scale, scratch.scale);
         if (scratch.entity != null && "minecraft:ender_dragon".equals(scratch.entity.getStringOr("entityType", ""))) {
             poseStack.mulPose(Axis.XP.rotationDegrees(180f));
