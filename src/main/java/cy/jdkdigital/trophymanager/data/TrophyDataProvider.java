@@ -14,7 +14,7 @@ import net.neoforged.neoforge.data.event.GatherDataEvent;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-@EventBusSubscriber(modid = TrophyManager.MODID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = TrophyManager.MODID)
 public class TrophyDataProvider
 {
     @SubscribeEvent
