@@ -1,0 +1,13 @@
+{
+  "type": "trophymanager:item_trophy",
+  "category": "misc",
+  "base": {
+    "tag": "trophymanager:trophy_base"
+  },
+  "side": {
+    "tag": "c:nuggets/iron"
+  },
+  "spin": {
+    "tag": "c:dusts/redstone"
+  }
+}
