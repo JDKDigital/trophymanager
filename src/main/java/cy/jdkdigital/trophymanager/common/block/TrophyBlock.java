@@ -15,9 +15,11 @@ import cy.jdkdigital.trophymanager.network.PacketOpenGui;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -30,10 +32,12 @@ import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Strider;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -276,8 +280,9 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
 
         CompoundTag entityTag = new CompoundTag();
         entityTag.putString("entityType", "trophymanager:player");
-        entityTag.putString("uuid", player.getUUID().toString());
-        trophyTag.putString("Name", player.getDisplayName().getString() + " Trophy");
+        ResolvableProfile profile = new ResolvableProfile(player.getGameProfile());
+        ResolvableProfile.CODEC.encodeStart(NbtOps.INSTANCE, profile).result().ifPresent(encoded -> entityTag.put("profile", encoded));
+        trophyTag.putString("Subject", player.getGameProfile().getName());
         trophyTag.put("TrophyEntity", entityTag);
 
         trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));
@@ -286,11 +291,14 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
     }
 
     public static ItemStack createTrophy(Entity entity, CompoundTag tag) {
-        Component name = entity.getDisplayName();
-        return createTrophy(entity.getType().builtInRegistryHolder(), tag, name.getString());
+        if (entity instanceof Strider strider && strider.isSuffocating()) {
+            tag.putBoolean("Suffocating", true);
+        }
+        Component customName = entity.getCustomName();
+        return createTrophy(entity.getType().builtInRegistryHolder(), tag, customName != null ? customName.getString() : entity.getType().getDescriptionId());
     }
 
-    public static ItemStack createTrophy(Holder<EntityType<?>> entityType, CompoundTag tag, String name) {
+    public static ItemStack createTrophy(Holder<EntityType<?>> entityType, CompoundTag tag, String subject) {
         String entityId = entityType.getKey().location().toString();
         if (entityId == null || entityId.isEmpty()) {
             return ItemStack.EMPTY;
@@ -328,14 +336,42 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
         }
 
         trophyTag.put("TrophyEntity", entityTag);
-        trophyTag.putString("Name", name + " Trophy");
+        trophyTag.putString("Subject", subject);
 
         trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));
 
         return trophy;
     }
 
-    public static ItemStack createTrophy(Level level, ItemStack stack, String name) {
+    public static ItemStack createDefaultItemTrophy() {
+        CompoundTag trophyTag = new CompoundTag();
+        ItemStack trophy = new ItemStack(ModBlocks.TROPHY.get());
+        trophyTag.putString("TrophyType", "item");
+        trophyTag.putString("Name", "block.trophymanager.trophy");
+
+        trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));
+
+        return trophy;
+    }
+
+    public static ItemStack createItemTrophy(HolderLookup.Provider registries, ItemStack stack, Block baseBlock, boolean spin) {
+        CompoundTag trophyTag = new CompoundTag();
+        ItemStack trophy = new ItemStack(ModBlocks.TROPHY.get());
+        trophyTag.putString("TrophyType", "item");
+        trophyTag.put("TrophyItem", stack.copyWithCount(1).save(registries));
+        ResourceLocation baseId = BuiltInRegistries.BLOCK.getKey(baseBlock);
+        if (baseId != null) {
+            trophyTag.putString("BaseBlock", baseId.toString());
+        }
+        trophyTag.putBoolean("Spin", spin);
+        trophyTag.putString("Subject", subjectOf(stack));
+
+        trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));
+
+        return trophy;
+    }
+
+    public static ItemStack createTrophy(Level level, ItemStack stack, String subject) {
         if (stack.isEmpty() || level == null) {
             return ItemStack.EMPTY;
         }
@@ -344,10 +380,24 @@ public class TrophyBlock extends BaseEntityBlock implements SimpleWaterloggedBlo
         ItemStack trophy = new ItemStack(ModBlocks.TROPHY.get());
         trophyTag.putString("TrophyType", "item");
         trophyTag.put("TrophyItem", stack.save(level.registryAccess()));
-        trophyTag.putString("Name", name + " Trophy");
+        trophyTag.putString("Subject", subject);
 
         trophy.set(DataComponents.CUSTOM_DATA, CustomData.of(trophyTag));
 
         return trophy;
+    }
+
+    private static String subjectOf(ItemStack stack) {
+        return stack.has(DataComponents.CUSTOM_NAME) ? stack.getHoverName().getString() : stack.getDescriptionId();
+    }
+
+    public static Component trophyName(String subject, String legacyName) {
+        if (!subject.isBlank()) {
+            return Component.translatable("trophymanager.trophy.name", Component.translatable(subject));
+        }
+        if (!legacyName.isBlank()) {
+            return Component.translatable(legacyName);
+        }
+        return Component.translatable("block.trophymanager.trophy");
     }
 }

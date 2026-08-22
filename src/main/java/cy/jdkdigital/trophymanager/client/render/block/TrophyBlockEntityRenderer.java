@@ -3,19 +3,14 @@ package cy.jdkdigital.trophymanager.client.render.block;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import cy.jdkdigital.trophymanager.TrophyManager;
-import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.PlayerModel;
-import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.Block;
@@ -27,13 +22,7 @@ import javax.annotation.Nonnull;
 
 public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBlockEntity>
 {
-    private PlayerInfo playerInfo;
-    PlayerModel<Player> playerModelRegular;
-    PlayerModel<Player> playerModelSlim;
-
     public TrophyBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
-        this.playerModelRegular = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false);
-        this.playerModelSlim = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM), true);
     }
 
     @Override
@@ -65,7 +54,7 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
 
     private void renderItem(TrophyBlockEntity trophyBlockEntity, PoseStack poseStack, @Nonnull MultiBufferSource buffer, int combinedLightIn, int combinedOverlayIn) {
         double tick = 0;
-        if (TrophyManagerConfig.GENERAL.rotateItemTrophies.get() && !(trophyBlockEntity.item.getItem() instanceof BlockItem)) {
+        if (trophyBlockEntity.spin && !(trophyBlockEntity.item.getItem() instanceof BlockItem)) {
             tick = System.currentTimeMillis() / 800.0D;
         } else {
             if (trophyBlockEntity.getLevel() != null) {
@@ -84,7 +73,9 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
 
         poseStack.pushPose();
         poseStack.translate(0.5f, trophyBlockEntity.offsetY + 0.5D + Math.sin(tick / 25f) / 15f, 0.5f);
-        poseStack.mulPose(Axis.YP.rotationDegrees((float) ((tick * 30.0D) % 360)));
+        poseStack.mulPose(Axis.YP.rotationDegrees((float) ((tick * 30.0D) % 360) + trophyBlockEntity.rotY));
+        poseStack.mulPose(Axis.XP.rotationDegrees(trophyBlockEntity.rotX));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(trophyBlockEntity.rotZ));
         poseStack.scale(trophyBlockEntity.scale, trophyBlockEntity.scale, trophyBlockEntity.scale);
         if (trophyBlockEntity.item.getItem() instanceof BlockItem) {
             poseStack.translate(0, -0.25f, 0);
@@ -111,8 +102,9 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
 
         poseStack.pushPose();
         poseStack.translate(0.5f, trophyTileEntity.offsetY, 0.5f);
-        poseStack.mulPose(Axis.YP.rotationDegrees(angle));
+        poseStack.mulPose(Axis.YP.rotationDegrees(angle + trophyTileEntity.rotY));
         poseStack.mulPose(Axis.XP.rotationDegrees(trophyTileEntity.rotX));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(trophyTileEntity.rotZ));
         poseStack.scale(trophyTileEntity.scale, trophyTileEntity.scale, trophyTileEntity.scale);
 
         if (trophyTileEntity.entity.getString("entityType").equals("minecraft:ender_dragon")) {

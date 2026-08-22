@@ -3,6 +3,7 @@ package cy.jdkdigital.trophymanager.network;
 import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
+import cy.jdkdigital.trophymanager.common.entity.TrophyPose;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -33,13 +34,26 @@ public record PacketUpdateTrophy(BlockPos pos, CompoundTag tag) implements Custo
         if (context.player().level().getBlockEntity(data.pos()) instanceof TrophyBlockEntity trophyBlockEntity) {
             trophyBlockEntity.offsetY = Math.min(data.tag().getDouble("OffsetY"), TrophyManagerConfig.GENERAL.maxYOffset.get());
             trophyBlockEntity.scale = (float) Math.min(data.tag().getFloat("Scale"), TrophyManagerConfig.GENERAL.maxSize.get());
-            if (data.tag().contains("PoseType")) {
+            trophyBlockEntity.rotX = wrapDegrees(data.tag().getFloat("RotX"));
+            trophyBlockEntity.rotY = wrapDegrees(data.tag().getFloat("RotY"));
+            trophyBlockEntity.rotZ = wrapDegrees(data.tag().getFloat("RotZ"));
+            if (trophyBlockEntity.entity != null && data.tag().contains("PoseType")) {
                 trophyBlockEntity.entity.putString("PoseType", data.tag().getString("PoseType"));
+            }
+            if (trophyBlockEntity.entity != null && data.tag().contains(TrophyPose.NBT_KEY)) {
+                trophyBlockEntity.entity.putString(TrophyPose.NBT_KEY, TrophyPose.byName(data.tag().getString(TrophyPose.NBT_KEY)).name());
             }
             trophyBlockEntity.getCachedEntity();
             trophyBlockEntity.setChanged();
             context.player().level().sendBlockUpdated(data.pos(), trophyBlockEntity.getBlockState(), trophyBlockEntity.getBlockState(), Block.UPDATE_CLIENTS);
         }
+    }
+
+    private static float wrapDegrees(float degrees) {
+        if (!Float.isFinite(degrees)) {
+            return 0.0F;
+        }
+        return ((degrees % 360.0F) + 360.0F) % 360.0F;
     }
 
     @Override

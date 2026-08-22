@@ -1,3 +1,17 @@
+1.21.1-3.0.0
+
+- Trophies can now be rotated on all three axes from the trophy GUI
+- Added a crafting recipe for item trophies
+- rotateItemTrophies config has been removed in favor of a direct property on the trophy
+- Player trophies finally work, dropping when one player kills another and rendering with the victim's skin on a player model
+- The size and Y offset values in the trophy GUI are now labelled
+- Added JEI support with an Item Trophy recipe category
+- Capture cold striders
+- Added dye bee variant support
+- Capture more Ice and Fire visual state: dragon gender, ancient sea serpents and amphithere and hippogryph types
+- Capture Living Things snail shell patterns
+
+
 1.21.1-2.5.0
 
 - Added Shiny! Mobs support, capturing the visual state of shiny copies including the shiny Ender Dragon

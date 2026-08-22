@@ -11,6 +11,7 @@ import cy.jdkdigital.trophymanager.compat.CuriosCompat;
 import cy.jdkdigital.trophymanager.init.ModBlockEntities;
 import cy.jdkdigital.trophymanager.init.ModBlocks;
 import cy.jdkdigital.trophymanager.init.ModEntities;
+import cy.jdkdigital.trophymanager.init.ModRecipes;
 //import cy.jdkdigital.trophymanager.network.Networking;
 import cy.jdkdigital.trophymanager.network.PacketOpenGui;
 import cy.jdkdigital.trophymanager.network.PacketUpdateTrophy;
@@ -79,6 +80,7 @@ public class TrophyManager
         ModBlocks.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModEntities.ENTITIES.register(modEventBus);
+        ModRecipes.RECIPE_SERIALIZERS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.SERVER, TrophyManagerConfig.SERVER_CONFIG);
     }
@@ -117,14 +119,15 @@ public class TrophyManager
                 ItemStack trophy = TrophyBlock.createTrophy(deadEntity, entityTag);
                 Block.popResource(deadEntity.level(), deadEntity.blockPosition(), trophy);
             }
-        } else if (TrophyManagerConfig.GENERAL.dropFromPlayers.get() && deadEntity instanceof Player killedPlayer) { // && source instanceof ServerPlayer player && (!(source instanceof FakePlayer) || TrophyManagerConfig.GENERAL.allowFakePlayer.get())) {
+        } else if (TrophyManagerConfig.GENERAL.dropFromPlayers.get() && deadEntity instanceof Player killedPlayer
+                && source instanceof ServerPlayer && !(source instanceof FakePlayer)) {
             double chance = TrophyManagerConfig.GENERAL.dropChancePlayers.get();
 
             boolean willDropTrophy = chance >= deadEntity.level().random.nextDouble();
 
             if (willDropTrophy) {
                 ItemStack trophy = TrophyBlock.createPlayerTrophy(killedPlayer);
-//                Block.popResource(deadEntity.level(), deadEntity.blockPosition(), trophy);
+                Block.popResource(deadEntity.level(), deadEntity.blockPosition(), trophy);
             }
         }
     }
@@ -144,7 +147,7 @@ public class TrophyManager
 //        }
 //    }
 
-    @EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid = MODID, value = Dist.CLIENT)
     public class ClientSetup
     {
         @SubscribeEvent
@@ -154,7 +157,7 @@ public class TrophyManager
         }
     }
 
-    @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD, modid = MODID)
+    @EventBusSubscriber(modid = MODID)
     public static class ModEventHandler
     {
         @SubscribeEvent
@@ -190,7 +193,8 @@ public class TrophyManager
                 String[] entities = {"allay", "axolotl", "bat", "bee", "blaze", "camel", "cat", "cave_spider", "chicken", "cow", "creeper", "dolphin", "donkey", "drowned", "elder_guardian", "ender_dragon", "enderman", "endermite", "evoker", "fox", "frog", "ghast", "glow_squid", "goat", "guardian", "hoglin", "horse", "husk", "illusioner", "iron_golem", "llama", "magma_cube", "mule", "mooshroom", "ocelot", "panda", "parrot", "phantom", "pig", "piglin", "piglin_brute", "pillager", "polar_bear", "pufferfish", "rabbit", "ravager", "sheep", "shulker", "silverfish", "skeleton", "skeleton_horse", "slime", "snow_golem", "spider", "squid", "stray", "strider", "tadpole", "trader_llama", "tropical_fish", "turtle", "vex", "villager", "vindicator", "wandering_trader", "warden", "witch", "wither", "wither_skeleton", "wolf", "zoglin", "zombie", "zombie_horse", "zombie_villager", "zombified_piglin", "sniffer", "bogged", "breeze"};
 
                 for (String entityId : entities) {
-                    event.accept(TrophyBlock.createTrophy(BuiltInRegistries.ENTITY_TYPE.getHolder(ResourceLocation.withDefaultNamespace(entityId)).get(), new CompoundTag(), idToName("minecraft:" + entityId)));
+                    BuiltInRegistries.ENTITY_TYPE.getHolder(ResourceLocation.withDefaultNamespace(entityId)).ifPresent(holder ->
+                            event.accept(TrophyBlock.createTrophy(holder, new CompoundTag(), holder.value().getDescriptionId())));
                 }
             }
         }
@@ -213,13 +217,4 @@ public class TrophyManager
         }
     }
 
-    public static String idToName(String id) {
-        String[] parts = id.substring(id.indexOf(":") + 1).split("_");
-        for (int i = 0; i < parts.length; i++) {
-            if (!parts[i].isEmpty()) {
-                parts[i] = parts[i].substring(0, 1).toUpperCase() + parts[i].substring(1);
-            }
-        }
-        return String.join(" ", parts);
-    }
 }

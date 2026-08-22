@@ -1,6 +1,8 @@
 package cy.jdkdigital.trophymanager.common.item;
 
+import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.client.render.item.TrophyItemStackRenderer;
+import cy.jdkdigital.trophymanager.common.block.TrophyBlock;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -28,7 +30,7 @@ public class TrophyItem extends BlockItem
     public Component getName(ItemStack stack) {
         if (stack.has(DataComponents.CUSTOM_DATA)) {
             var tag = stack.get(DataComponents.CUSTOM_DATA).getUnsafe();
-            return Component.translatable(tag.getString("Name"));
+            return TrophyBlock.trophyName(tag.getString("Subject"), tag.getString("Name"));
         }
         return super.getName(stack);
     }
@@ -39,7 +41,8 @@ public class TrophyItem extends BlockItem
 
         if (pStack.has(DataComponents.CUSTOM_DATA)) {
             var tag = pStack.get(DataComponents.CUSTOM_DATA).getUnsafe();
-            pTooltipComponents.add(Component.translatable("trophymanager.tooltip.trophy.scale", tag.getCompound("TrophyData").getFloat("scale")));
+            float scale = tag.contains("Scale") ? tag.getFloat("Scale") : TrophyManagerConfig.GENERAL.defaultScale.get().floatValue();
+            pTooltipComponents.add(Component.translatable("trophymanager.tooltip.trophy.scale", scale));
         }
     }
 
@@ -58,7 +61,7 @@ public class TrophyItem extends BlockItem
     }
 
     @Override
-    public boolean canEquip(ItemStack stack, net.minecraft.world.entity.EquipmentSlot armorType, LivingEntity entity) {
+    public boolean canEquip(ItemStack stack, EquipmentSlot armorType, LivingEntity entity) {
         return armorType == EquipmentSlot.HEAD;
     }
 

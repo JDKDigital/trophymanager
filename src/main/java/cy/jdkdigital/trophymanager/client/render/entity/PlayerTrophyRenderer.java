@@ -1,65 +1,80 @@
 package cy.jdkdigital.trophymanager.client.render.entity;
 
-import cy.jdkdigital.trophymanager.TrophyManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import cy.jdkdigital.trophymanager.common.entity.RenderPlayer;
+import cy.jdkdigital.trophymanager.common.entity.TrophyPose;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ZombieModel;
-import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.renderer.entity.AbstractZombieRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.resources.PlayerSkin;
-import net.minecraft.client.resources.SkinManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.component.ResolvableProfile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-public class PlayerTrophyRenderer extends AbstractZombieRenderer<RenderPlayer, ZombieModel<RenderPlayer>>
+public class PlayerTrophyRenderer extends LivingEntityRenderer<RenderPlayer, PlayerModel<RenderPlayer>>
 {
-    static Map<UUID, PlayerSkin> playerInfoCache = new HashMap<>();
+    private static final float FLYING_PITCH = -90.0F;
+
+    private final PlayerModel<RenderPlayer> wideModel;
+    private final PlayerModel<RenderPlayer> slimModel;
 
     public PlayerTrophyRenderer(EntityRendererProvider.Context context) {
-        this(context, ModelLayers.ZOMBIE, ModelLayers.ZOMBIE_INNER_ARMOR, ModelLayers.ZOMBIE_OUTER_ARMOR);
-    }
+        super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.5F);
 
-    public PlayerTrophyRenderer(EntityRendererProvider.Context context, ModelLayerLocation p_174459_, ModelLayerLocation p_174460_, ModelLayerLocation p_174461_) {
-        super(context, new ZombieModel<>(context.bakeLayer(p_174459_)), new ZombieModel<>(context.bakeLayer(p_174460_)), new ZombieModel<>(context.bakeLayer(p_174461_)));
+        this.wideModel = getModel();
+        this.slimModel = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM), true);
+
+        addLayer(new HumanoidArmorLayer<>(this,
+                new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR)),
+                new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR)),
+                context.getModelManager()));
+        addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()));
     }
 
     @Override
-    public @NotNull ResourceLocation getTextureLocation(RenderPlayer player) {
-        if (!player.getUUIDData().isEmpty()) {
-//            return getSkinTextureLocation(UUID.fromString(player.getUUIDData()));
+    public void render(@NotNull RenderPlayer entity, float entityYaw, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource buffer, int packedLight) {
+        PlayerSkin skin = skin(entity);
+        this.model = skin != null && skin.model() == PlayerSkin.Model.SLIM ? slimModel : wideModel;
+        super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
+    }
+
+    @Override
+    protected void setupRotations(@NotNull RenderPlayer entity, @NotNull PoseStack poseStack, float bob, float yBodyRot, float partialTick, float scale) {
+        super.setupRotations(entity, poseStack, bob, yBodyRot, partialTick, scale);
+
+        TrophyPose pose = entity.getTrophyPose();
+        this.model.riding = pose == TrophyPose.SITTING;
+        if (pose == TrophyPose.FLYING) {
+            float half = entity.getBbHeight() * 0.5F;
+            poseStack.translate(0.0F, half, half);
+            poseStack.mulPose(Axis.XP.rotationDegrees(FLYING_PITCH));
         }
-        return DefaultPlayerSkin.getDefaultTexture();
     }
 
-    @Nullable
-    protected static PlayerSkin getPlayerInfo(ResolvableProfile pProfile) {
-        if (!playerInfoCache.containsKey(pProfile.id().get())) {
-            SkinManager skinmanager = Minecraft.getInstance().getSkinManager();
-            playerInfoCache.put(pProfile.id().get(), skinmanager.getInsecureSkin(pProfile.gameProfile()));
+    @Override
+    public @NotNull ResourceLocation getTextureLocation(RenderPlayer entity) {
+        PlayerSkin skin = skin(entity);
+        return skin == null ? DefaultPlayerSkin.getDefaultTexture() : skin.texture();
+    }
+
+    private static @Nullable PlayerSkin skin(RenderPlayer entity) {
+        ResolvableProfile profile = entity.getProfile();
+        if (profile == null) {
+            return null;
         }
-        return playerInfoCache.get(pProfile.id().get());
+        try {
+            return Minecraft.getInstance().getSkinManager().getInsecureSkin(profile.gameProfile());
+        } catch (Exception e) {
+            return null;
+        }
     }
-
-    public static boolean isSkinLoaded(ResolvableProfile pProfile) {
-        PlayerSkin playerinfo = getPlayerInfo(pProfile);
-        return playerinfo != null;
-    }
-
-//    public static ResourceLocation getSkinTextureLocation(ResolvableProfile pProfile) {
-//        PlayerSkin playerinfo = getPlayerInfo(pProfile);
-//        if (playerinfo != null) {
-//            TrophyManager.LOGGER.info("playerInfo " + playerinfo.texture());
-//        }
-//        return playerinfo == null ? DefaultPlayerSkin.getDefaultTexture() : playerinfo.getSkin().texture();
-//    }
 }

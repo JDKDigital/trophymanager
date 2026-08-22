@@ -26,10 +26,6 @@ repositories {
     maven {
         url "https://www.cursemaven.com"
     }
-    maven {
-        name = "EMI"
-        url = "https://maven.terraformersmc.com/"
-    }
 }
 
 base {
@@ -124,13 +120,23 @@ configurations {
 }
 
 dependencies {
-    compileOnly "dev.emi:emi-neoforge:1.1.22+1.21.1:api"
-    runtimeOnly "dev.emi:emi-neoforge:1.1.22+1.21.1"
     implementation fileTree('libs') { include '*.jar'}
-    implementation "curse.maven:jei-238222:5846880"
-    implementation "curse.maven:curios-309927:6288293"
+    compileOnly "curse.maven:jei-238222:5846880"
+    localRuntime "curse.maven:jei-238222:5846880"
+    implementation "curse.maven:curios-309927:6529130"
     implementation "curse.maven:productivebees-377897:6154395"
-    implementation "curse.maven:oh-the-biomes-weve-gone-1070751:6416918"
+    implementation "curse.maven:oh-the-biomes-weve-gone-1070751:8245253"
+    implementation "curse.maven:iceandfire-ce-1040076:8683031"
+    implementation "curse.maven:uranus-1010827:8008516"
+    implementation "curse.maven:jupiter-1072905:7738312"
+    implementation "curse.maven:ars-nouveau-401955:8517890"
+    implementation "curse.maven:ars-elemental-561470:8399862"
+    implementation "curse.maven:twilightforest-227639:7797302"
+    implementation "curse.maven:lendercataclysm-551586:8706841"
+    implementation "curse.maven:creeper-overhaul-561625:6051279"
+    implementation "curse.maven:variants-and-ventures-981139:8190696"
+    implementation "curse.maven:yacl-667299:7437845"
+    implementation "curse.maven:lionfish-api-1001614:8345326"
     implementation "curse.maven:geckolib-388172:6304958"
     implementation "curse.maven:terrablender-neoforge-940057:6054947"
     implementation "curse.maven:oh-the-trees-youll-grow-962544:6479091"
