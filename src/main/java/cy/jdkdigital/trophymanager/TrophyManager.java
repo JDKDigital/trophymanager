@@ -13,6 +13,7 @@ import cy.jdkdigital.trophymanager.compat.CuriosCompat;
 import cy.jdkdigital.trophymanager.init.ModBlockEntities;
 import cy.jdkdigital.trophymanager.init.ModBlocks;
 import cy.jdkdigital.trophymanager.init.ModEntities;
+import cy.jdkdigital.trophymanager.init.ModRecipes;
 import cy.jdkdigital.trophymanager.network.PacketOpenGui;
 import cy.jdkdigital.trophymanager.network.PacketUpdateTrophy;
 import net.minecraft.core.HolderLookup;
@@ -78,6 +79,7 @@ public class TrophyManager
         ModBlocks.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModEntities.ENTITIES.register(modEventBus);
+        ModRecipes.RECIPE_SERIALIZERS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.SERVER, TrophyManagerConfig.SERVER_CONFIG);
     }
@@ -112,13 +114,15 @@ public class TrophyManager
                 ItemStack trophy = TrophyBlock.createTrophy(deadEntity, entityTag);
                 Block.popResource(deadEntity.level(), deadEntity.blockPosition(), trophy);
             }
-        } else if (TrophyManagerConfig.GENERAL.dropFromPlayers.get() && deadEntity instanceof Player killedPlayer) {
+        } else if (TrophyManagerConfig.GENERAL.dropFromPlayers.get() && deadEntity instanceof Player killedPlayer
+                && source instanceof ServerPlayer && !(source instanceof FakePlayer)) {
             double chance = TrophyManagerConfig.GENERAL.dropChancePlayers.get();
 
             boolean willDropTrophy = chance >= deadEntity.level().getRandom().nextDouble();
 
             if (willDropTrophy) {
                 ItemStack trophy = TrophyBlock.createPlayerTrophy(killedPlayer);
+                Block.popResource(deadEntity.level(), deadEntity.blockPosition(), trophy);
             }
         }
     }
@@ -167,7 +171,7 @@ public class TrophyManager
 
                 for (String entityId : entities) {
                     BuiltInRegistries.ENTITY_TYPE.get(Identifier.withDefaultNamespace(entityId)).ifPresent(holder ->
-                            event.accept(TrophyBlock.createTrophy(holder, new CompoundTag(), idToName("minecraft:" + entityId))));
+                            event.accept(TrophyBlock.createTrophy(holder, new CompoundTag(), holder.value().getDescriptionId())));
                 }
             }
         }
@@ -189,13 +193,4 @@ public class TrophyManager
         }
     }
 
-    public static String idToName(String id) {
-        String[] parts = id.substring(id.indexOf(":") + 1).split("_");
-        for (int i = 0; i < parts.length; i++) {
-            if (!parts[i].isEmpty()) {
-                parts[i] = parts[i].substring(0, 1).toUpperCase() + parts[i].substring(1);
-            }
-        }
-        return String.join(" ", parts);
-    }
 }

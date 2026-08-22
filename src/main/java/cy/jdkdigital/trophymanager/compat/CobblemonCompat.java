@@ -23,7 +23,9 @@ public class CobblemonCompat
         Set<String> extra = new HashSet<>();
         if (!features.isEmpty()) {
             for (Tag t : features) {
-                CompoundTag feature = (CompoundTag)t;
+                if (!(t instanceof CompoundTag feature)) {
+                    continue;
+                }
                 String featureName = feature.getString("cobblemon:feature_id");
                 var speciesFeature = SpeciesFeatures.getFeature(featureName);
                 if (speciesFeature != null && speciesFeature.invoke(feature) instanceof FlagSpeciesFeature) {

@@ -3,8 +3,11 @@ package cy.jdkdigital.trophymanager.common.blockentity;
 import com.mojang.logging.LogUtils;
 import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
+import cy.jdkdigital.trophymanager.common.block.TrophyBlock;
 import cy.jdkdigital.trophymanager.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -27,10 +31,12 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Shulker;
+import net.minecraft.world.entity.monster.Strider;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.TagValueInput;
@@ -58,8 +64,10 @@ public class TrophyBlockEntity extends BlockEntity
     public float rotZ = 0.0F;
     public float scale = 1.0F;
     public Identifier baseBlock;
+    public boolean spin = false;
     public boolean isOnHead = false;
     private String name = "";
+    private String subject = "";
 
     public TrophyBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TROPHY.get(), pos, state);
@@ -89,11 +97,29 @@ public class TrophyBlockEntity extends BlockEntity
         trophy.putFloat("RotY", rotY);
         trophy.putFloat("RotZ", rotZ);
         trophy.putFloat("Scale", scale);
+        trophy.putBoolean("Spin", spin);
         if (baseBlock != null) {
             trophy.putString("BaseBlock", baseBlock.toString());
         }
         if (name != null) {
             trophy.putString("Name", name);
+        }
+        if (subject != null) {
+            trophy.putString("Subject", subject);
+        }
+    }
+
+    @Override
+    protected void collectImplicitComponents(DataComponentMap.Builder components) {
+        super.collectImplicitComponents(components);
+
+        if (level == null) {
+            return;
+        }
+        try {
+            components.set(DataComponents.CUSTOM_DATA, CustomData.of(saveWithoutMetadata(level.registryAccess()).getCompoundOrEmpty("TrophyData")));
+        } catch (Exception e) {
+            TrophyManager.LOGGER.warn("Could not read the trophy data at " + worldPosition + ": " + e.getMessage());
         }
     }
 
@@ -114,13 +140,20 @@ public class TrophyBlockEntity extends BlockEntity
         this.rotX = tag.getFloatOr("RotX", 0.0F);
         this.rotY = tag.getFloatOr("RotY", 0.0F);
         this.rotZ = tag.getFloatOr("RotZ", 0.0F);
+        this.spin = tag.getBooleanOr("Spin", false);
         this.offsetY = tag.contains("OffsetY") ? tag.getDoubleOr("OffsetY", 0.0D) : TrophyManagerConfig.GENERAL.defaultYOffset.get();
         this.baseBlock = Identifier.parse(tag.contains("BaseBlock") ? tag.getStringOr("BaseBlock", "") : TrophyManagerConfig.GENERAL.defaultBaseBlock.get());
 
         if (tag.contains("Name")) {
             this.name = tag.getStringOr("Name", "");
         }
+
+        if (tag.contains("Subject")) {
+            this.subject = tag.getStringOr("Subject", "");
+        }
     }
+
+
 
     public Entity getCachedEntity() {
         return getCachedEntity(false);
@@ -138,6 +171,8 @@ public class TrophyBlockEntity extends BlockEntity
                         float peek = Mth.clamp(entity.getByteOr("Peek", (byte) 0) * 0.01F, 0.0F, 1.0F);
                         shulker.currentPeekAmount = peek;
                         shulker.currentPeekAmountO = peek;
+                    } else if (cachedEntity instanceof Strider strider && entity.contains("Suffocating")) {
+                        strider.setSuffocating(entity.getBooleanOr("Suffocating", false));
                     }
                     try {
                         addPassengers(cachedEntity, entity);
@@ -198,6 +233,10 @@ public class TrophyBlockEntity extends BlockEntity
 
     public Block getBaseBlock() {
         return baseBlock == null ? null : BuiltInRegistries.BLOCK.get(baseBlock).map(Holder::value).orElse(null);
+    }
+
+    public Component getDisplayName() {
+        return TrophyBlock.trophyName(subject, name);
     }
 
     @Nullable

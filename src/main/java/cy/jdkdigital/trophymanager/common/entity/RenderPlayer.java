@@ -1,47 +1,54 @@
 package cy.jdkdigital.trophymanager.common.entity;
 
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import org.jetbrains.annotations.Nullable;
 
 public class RenderPlayer extends Zombie
 {
-    static final EntityDataAccessor<String> DATA_UUID = SynchedEntityData.defineId(RenderPlayer.class, EntityDataSerializers.STRING);
+    private static final String PROFILE_KEY = "profile";
+
+    private ResolvableProfile profile;
 
     public RenderPlayer(EntityType<? extends Zombie> entityType, Level level) {
         super(entityType, level);
     }
 
-    @Override
-    protected void defineSynchedData(SynchedEntityData.Builder pBuilder) {
-        super.defineSynchedData(pBuilder);
-        pBuilder.define(DATA_UUID, "");
+    public @Nullable ResolvableProfile getProfile() {
+        return profile;
     }
 
-    public void setUUIDData(String uuid) {
-        this.getEntityData().set(DATA_UUID, uuid);
+    public void setProfile(ResolvableProfile profile) {
+        this.profile = profile;
     }
 
-    public String getUUIDData() {
-        return this.getEntityData().get(DATA_UUID);
+    public TrophyPose getTrophyPose() {
+        return TrophyPose.byPose(getPose());
+    }
+
+    public void setTrophyPose(TrophyPose trophyPose) {
+        setPose(trophyPose.pose());
     }
 
     @Override
     public void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
-        setUUIDData(input.getStringOr("uuid", ""));
+
+        input.read(PROFILE_KEY, ResolvableProfile.CODEC).ifPresent(this::setProfile);
+        setTrophyPose(TrophyPose.byName(input.getStringOr(TrophyPose.NBT_KEY, "")));
     }
 
     @Override
     public void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
-        if (!this.getUUIDData().isEmpty()) {
-            output.putString("uuid", this.getUUIDData());
+
+        if (profile != null) {
+            output.store(PROFILE_KEY, ResolvableProfile.CODEC, profile);
         }
+        output.putString(TrophyPose.NBT_KEY, getTrophyPose().name());
     }
 }

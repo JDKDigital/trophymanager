@@ -56,17 +56,6 @@
         "Variant"
       ]
     },
-    "biomeswevegone:wreath": {
-      "neoforge:conditions": [
-        {
-          "type": "neoforge:mod_loaded",
-          "modid": "biomeswevegone"
-        }
-      ],
-      "nbt": [
-        "Type"
-      ]
-    },
     "cobblemon:pokemon": {
       "neoforge:conditions": [
         {
@@ -143,7 +132,8 @@
         }
       ],
       "nbt": [
-        "Variant"
+        "Variant",
+        "Type"
       ]
     },
     "iceandfire:cyclops": {
@@ -209,7 +199,8 @@
         }
       ],
       "nbt": [
-        "Variant"
+        "Variant",
+        "Gender"
       ]
     },
     "iceandfire:hippocampus": {
@@ -231,7 +222,8 @@
         }
       ],
       "nbt": [
-        "Variant"
+        "Variant",
+        "Type"
       ]
     },
     "iceandfire:hydra": {
@@ -253,7 +245,8 @@
         }
       ],
       "nbt": [
-        "Variant"
+        "Variant",
+        "Gender"
       ]
     },
     "iceandfire:lightning_dragon": {
@@ -264,7 +257,8 @@
         }
       ],
       "nbt": [
-        "Variant"
+        "Variant",
+        "Gender"
       ]
     },
     "iceandfire:pixie": {
@@ -286,7 +280,8 @@
         }
       ],
       "nbt": [
-        "Variant"
+        "Variant",
+        "Ancient"
       ]
     },
     "iceandfire:troll": {
@@ -421,7 +416,8 @@
       "nbt": [
         "SnailVariant",
         "ShellColorF",
-        "ShellColorB"
+        "ShellColorB",
+        "PatternType"
       ]
     },
     "minecraft:axolotl": {
@@ -557,6 +553,11 @@
         "Pumpkin"
       ]
     },
+    "minecraft:strider": {
+      "nbt": [
+        "Suffocating"
+      ]
+    },
     "minecraft:trader_llama": {
       "nbt": [
         "Variant"
@@ -606,6 +607,17 @@
       ]
     },
     "productivebees:configurable_bee": {
+      "neoforge:conditions": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "productivebees"
+        }
+      ],
+      "nbt": [
+        "type"
+      ]
+    },
+    "productivebees:dye_bee": {
       "neoforge:conditions": [
         {
           "type": "neoforge:mod_loaded",

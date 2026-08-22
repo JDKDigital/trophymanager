@@ -1,6 +1,9 @@
 package cy.jdkdigital.trophymanager.common.item;
 
+import cy.jdkdigital.trophymanager.TrophyManagerConfig;
+import cy.jdkdigital.trophymanager.common.block.TrophyBlock;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +24,8 @@ public class TrophyItem extends BlockItem
     @Override
     public Component getName(ItemStack stack) {
         if (stack.has(DataComponents.CUSTOM_DATA)) {
-            return Component.translatable(stack.get(DataComponents.CUSTOM_DATA).copyTag().getStringOr("Name", ""));
+            CompoundTag tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+            return TrophyBlock.trophyName(tag.getStringOr("Subject", ""), tag.getStringOr("Name", ""));
         }
         return super.getName(stack);
     }
@@ -31,8 +35,8 @@ public class TrophyItem extends BlockItem
         super.appendHoverText(pStack, pContext, pDisplay, pConsumer, pTooltipFlag);
 
         if (pStack.has(DataComponents.CUSTOM_DATA)) {
-            var tag = pStack.get(DataComponents.CUSTOM_DATA).copyTag();
-            pConsumer.accept(Component.translatable("trophymanager.tooltip.trophy.scale", tag.getCompoundOrEmpty("TrophyData").getFloatOr("scale", 1.0F)));
+            CompoundTag tag = pStack.get(DataComponents.CUSTOM_DATA).copyTag();
+            pConsumer.accept(Component.translatable("trophymanager.tooltip.trophy.scale", tag.getFloatOr("Scale", TrophyManagerConfig.GENERAL.defaultScale.get().floatValue())));
         }
     }
 }

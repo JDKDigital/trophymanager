@@ -1,4 +1,139 @@
 26.1.2-3.0.0
 
 - 26.1.2 port
-- Added rotation options
+- Trophies can now be rotated on all three axes from the trophy GUI
+- Player trophies can be posed standing, sitting or flying
+- Added a crafting recipe for item trophies, with the ingredients configurable from the recipe json
+- rotateItemTrophies config has been removed in favor of a direct property on the trophy
+- Player trophies finally work, dropping when one player kills another and rendering with the victim's skin on a player model
+- Trophy names are now built from a translation pattern, so translators control where the word Trophy goes
+- The size and Y offset values in the trophy GUI are now labelled
+- The trophy name is now shown at the top of the trophy GUI
+- Added JEI support with an Item Trophy recipe category
+- Fixed breaking a trophy losing every setting changed since it was placed
+- Fixed the scale tooltip always reading 0.0
+- Capture cold striders
+- Added dye bee variant support
+- Capture more Ice and Fire visual state: dragon gender, ancient sea serpents and amphithere and hippogryph types
+- Capture Living Things snail shell patterns
+
+
+1.21.1-2.5.0
+
+- Added Shiny! Mobs support, capturing the visual state of shiny copies including the shiny Ender Dragon
+- Added entity variant support for Ars Elemental Sirens, Creeper Overhaul Ocean Creepers, Ice and Fire Pixies and Variants&Ventures Murks
+- Capture more vanilla visual states: Shulker color and lid state, Goat horns, Bee nectar and sheared Bogged
+- Fixed villager trophies missing their clothing when placed in the world
+
+
+1.21.1-2.4.3
+
+- Move crash guards to a safer location
+
+
+1.21.1-2.4.2
+
+- Added extra crash guards when rendering trophies
+
+
+1.21.1-2.4.1
+
+- Support for cobblemon regional variants and shiny
+
+
+1.21.1-2.4.0
+
+- Added GUI options to change a cobblemon trophys pose
+- Increased render distance
+
+
+1.21.1-2.3.0
+
+- Proper Cobblemon support
+
+
+1.21.1-2.2.9
+
+- Added support for Ice & Fire entity variants
+- Added support for Starbuncle variants
+- Added support for Oh The Biomes We've Gone Wreath, Oddion and Pumpkin Warden
+
+
+1.21.1-2.2.8
+
+- Tropical fish variants
+
+
+1.21.1-2.2.7
+
+- Support for baby variants of zombie, husk, drowned, zombie villager and zombified piglins
+- Support for fox variants
+- Support for Living Things mob variants
+- Support for Pet Endermen (Enderman Overhaul)
+- Charged Creeper support
+
+
+1.21.1-2.2.6
+
+- Added trader llama variant
+- Added correct NBT and default properties for Man O War (BWG)
+
+
+1.21.1-2.2.5
+
+- Added cache nuking on level unload
+
+
+1.21.1-2.2.4
+
+- Fixed some rendering inconsistencies
+- Fixed productive bees compat
+
+
+1.21.0-2.2.1
+
+- Turn ender dragon upside down again
+
+
+1.21.1-2.2.0
+
+- Moved NBT map config to a datamap
+- Added datamap for default trophy settings like scale, offset and rotation
+- Added drop rate datamap where individual entity trophy drop rates can be configured
+- Fixed placing of ghost block when opening the gui while holding a block
+
+
+1.21.1-2.1.9
+
+- Fix crash from placing "empty" trophies
+
+
+1.21.1-2.1.8
+
+- Fixed crash in 1.21.1 when putting trophy in curio slot
+
+
+1.21.0-2.1.7
+
+- Guard against data-less trophies
+- Hide trophies in EMI
+
+
+1.21.0-2.1.6
+
+- Limits on negative scale and offset
+
+
+1.21.0-2.1.5
+
+- Render trophies even when base block is out of sight
+
+
+1.21.0-2.1.4
+
+- Fixed drops when mined
+
+
+1.21.0-2.1.3
+
+- 1.21 port

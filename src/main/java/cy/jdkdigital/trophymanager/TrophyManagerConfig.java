@@ -28,7 +28,6 @@ public class TrophyManagerConfig
         public final ModConfigSpec.DoubleValue defaultYOffset;
         public final ModConfigSpec.DoubleValue defaultScale;
         public final ModConfigSpec.ConfigValue<String> nbtMap;
-        public final ModConfigSpec.BooleanValue rotateItemTrophies;
 
         public General(ModConfigSpec.Builder builder) {
             builder.push("General");
@@ -88,10 +87,6 @@ public class TrophyManagerConfig
             nbtMap = builder
                     .comment("This config has been moved to a datamap at /data/trophymanager/data_maps/entity_type/nbt_map.json")
                     .define("nbtMap", "");
-
-            rotateItemTrophies = builder
-                    .comment("Have items on item trophies slowly rotate around.")
-                    .define("rotateItemTrophies", true);
 
             builder.pop();
         }

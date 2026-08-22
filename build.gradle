@@ -26,10 +26,6 @@ repositories {
     maven {
         url "https://www.cursemaven.com"
     }
-    maven {
-        name = "EMI"
-        url = "https://maven.terraformersmc.com/"
-    }
 }
 
 base {
@@ -110,7 +106,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 // Mod-compat layer: re-enable per-module as the upstream mod / dep publishes a 26.1.2 build.
 sourceSets.main.java {
     exclude 'cy/jdkdigital/trophymanager/compat/CobblemonCompat.java'
-    exclude 'cy/jdkdigital/trophymanager/compat/EmiCompat.java'
+    exclude 'cy/jdkdigital/trophymanager/compat/jei/**'
 }
 
 // Sets up a dependency configuration called 'localRuntime'.
@@ -126,8 +122,6 @@ dependencies {
     // None are required to compile the core/client/datagen sources; they were only
     // referenced as string ids in the data maps (resolved at runtime) or by the
     // excluded compat modules.
-//    compileOnly "dev.emi:emi-neoforge:1.1.22+1.21.1:api"
-//    runtimeOnly "dev.emi:emi-neoforge:1.1.22+1.21.1"
 //    implementation fileTree('libs') { include '*.jar'}
 //    implementation "curse.maven:jei-238222:5846880"
     compileOnly "curse.maven:curios-309927:8463519"

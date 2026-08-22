@@ -6,7 +6,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import cy.jdkdigital.trophymanager.TrophyManager;
-import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
 import cy.jdkdigital.trophymanager.init.ModBlocks;
 import net.minecraft.client.Minecraft;
@@ -97,7 +96,7 @@ public class TrophyBlockItemRenderer implements SpecialModelRenderer<CompoundTag
 
     private void submitItem(Minecraft mc, PoseStack poseStack, SubmitNodeCollector collector, int lightCoords, int overlayCoords) {
         boolean isBlock = scratch.item.getItem() instanceof BlockItem;
-        double tick = TrophyManagerConfig.GENERAL.rotateItemTrophies.get() && !isBlock ? System.currentTimeMillis() / 800.0D : 0D;
+        double tick = scratch.spin && !isBlock ? System.currentTimeMillis() / 800.0D : 0D;
         mc.getItemModelResolver().updateForTopItem(itemRenderState, scratch.item, ItemDisplayContext.FIXED, mc.level, null, 0);
 
         poseStack.pushPose();

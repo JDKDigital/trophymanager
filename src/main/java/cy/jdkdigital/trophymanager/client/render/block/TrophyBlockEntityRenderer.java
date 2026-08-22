@@ -2,7 +2,6 @@ package cy.jdkdigital.trophymanager.client.render.block;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.client.render.block.state.TrophyRenderState;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
 import net.minecraft.client.Minecraft;
@@ -69,7 +68,7 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         if ("item".equals(be.trophyType) && be.item != null && !be.item.isEmpty()) {
             state.renderItem = true;
             state.itemIsBlock = be.item.getItem() instanceof BlockItem;
-            boolean rotate = TrophyManagerConfig.GENERAL.rotateItemTrophies.get() && !state.itemIsBlock;
+            boolean rotate = be.spin && !state.itemIsBlock;
             double tick;
             if (rotate) {
                 tick = System.currentTimeMillis() / 800.0D;

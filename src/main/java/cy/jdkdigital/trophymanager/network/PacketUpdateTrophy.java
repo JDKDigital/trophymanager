@@ -3,6 +3,8 @@ package cy.jdkdigital.trophymanager.network;
 import cy.jdkdigital.trophymanager.TrophyManager;
 import cy.jdkdigital.trophymanager.TrophyManagerConfig;
 import cy.jdkdigital.trophymanager.common.blockentity.TrophyBlockEntity;
+import cy.jdkdigital.trophymanager.common.entity.TrophyPose;
+import cy.jdkdigital.trophymanager.common.entity.TrophyPose;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -38,6 +40,9 @@ public record PacketUpdateTrophy(BlockPos pos, CompoundTag tag) implements Custo
             trophyBlockEntity.rotZ = wrapDegrees(data.tag().getFloatOr("RotZ", 0.0F));
             if (data.tag().contains("PoseType") && trophyBlockEntity.entity != null) {
                 trophyBlockEntity.entity.putString("PoseType", data.tag().getStringOr("PoseType", ""));
+            }
+            if (data.tag().contains(TrophyPose.NBT_KEY) && trophyBlockEntity.entity != null) {
+                trophyBlockEntity.entity.putString(TrophyPose.NBT_KEY, TrophyPose.byName(data.tag().getStringOr(TrophyPose.NBT_KEY, "")).name());
             }
             trophyBlockEntity.getCachedEntity();
             trophyBlockEntity.setChanged();
