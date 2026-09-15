@@ -11,5 +11,6 @@
     "gui.trophy.pose.sitting": "Sentado",
     "gui.trophy.pose.flying": "Voando",
     "gui.trophy.jei.item_trophy": "Troféu de Item",
-    "gui.trophy.jei.any_item": "Coloque qualquer item aqui"
+    "gui.trophy.jei.any_item": "Coloque qualquer item aqui",
+    "gui.trophy.reset": "Resetar"
 }

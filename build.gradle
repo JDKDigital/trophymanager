@@ -106,7 +106,6 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 // Mod-compat layer: re-enable per-module as the upstream mod / dep publishes a 26.1.2 build.
 sourceSets.main.java {
     exclude 'cy/jdkdigital/trophymanager/compat/CobblemonCompat.java'
-    exclude 'cy/jdkdigital/trophymanager/compat/jei/**'
 }
 
 // Sets up a dependency configuration called 'localRuntime'.
@@ -123,7 +122,8 @@ dependencies {
     // referenced as string ids in the data maps (resolved at runtime) or by the
     // excluded compat modules.
 //    implementation fileTree('libs') { include '*.jar'}
-//    implementation "curse.maven:jei-238222:5846880"
+    compileOnly "curse.maven:jei-238222:7920202"
+    localRuntime "curse.maven:jei-238222:7920202"
     compileOnly "curse.maven:curios-309927:8463519"
     localRuntime "curse.maven:curios-309927:8463519"
 //    implementation "curse.maven:productivebees-377897:6154395"

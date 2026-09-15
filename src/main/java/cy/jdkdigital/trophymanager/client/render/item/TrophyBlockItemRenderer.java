@@ -96,17 +96,19 @@ public class TrophyBlockItemRenderer implements SpecialModelRenderer<CompoundTag
 
     private void submitItem(Minecraft mc, PoseStack poseStack, SubmitNodeCollector collector, int lightCoords, int overlayCoords) {
         boolean isBlock = scratch.item.getItem() instanceof BlockItem;
-        double tick = scratch.spin && !isBlock ? System.currentTimeMillis() / 800.0D : 0D;
+        double tick = scratch.spin ? System.currentTimeMillis() / 800.0D : 0D;
         mc.getItemModelResolver().updateForTopItem(itemRenderState, scratch.item, ItemDisplayContext.FIXED, mc.level, null, 0);
 
         poseStack.pushPose();
         poseStack.translate(0.5f, scratch.offsetY + 0.5D + Math.sin(tick / 25f) / 15f, 0.5f);
+        if (isBlock) {
+            poseStack.translate(0, -0.25f, 0);
+        }
         poseStack.mulPose(Axis.YP.rotationDegrees((float) ((tick * 30.0D) % 360) + scratch.rotY));
         poseStack.mulPose(Axis.XP.rotationDegrees(scratch.rotX));
         poseStack.mulPose(Axis.ZP.rotationDegrees(scratch.rotZ));
         poseStack.scale(scratch.scale, scratch.scale, scratch.scale);
         if (isBlock) {
-            poseStack.translate(0, -0.25f, 0);
             poseStack.scale(3f, 3f, 3f);
         }
         itemRenderState.submit(poseStack, collector, lightCoords, overlayCoords, 0);

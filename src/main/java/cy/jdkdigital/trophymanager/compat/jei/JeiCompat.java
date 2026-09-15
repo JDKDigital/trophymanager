@@ -15,14 +15,12 @@ import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -33,18 +31,18 @@ import java.util.List;
 @JeiPlugin
 public class JeiCompat implements IModPlugin
 {
-    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(TrophyManager.MODID, "jei");
+    private static final Identifier UID = Identifier.fromNamespaceAndPath(TrophyManager.MODID, "jei");
 
-    private static final List<ItemStack> EXAMPLE_SUBJECTS = List.of(
-            new ItemStack(Items.DIAMOND),
-            new ItemStack(Items.NETHERITE_INGOT),
-            new ItemStack(Items.ENCHANTED_GOLDEN_APPLE),
-            new ItemStack(Items.TOTEM_OF_UNDYING),
-            new ItemStack(Items.NETHER_STAR),
-            new ItemStack(Items.DRAGON_EGG));
+    private static final List<Item> EXAMPLE_SUBJECTS = List.of(
+            Items.DIAMOND,
+            Items.NETHERITE_INGOT,
+            Items.ENCHANTED_GOLDEN_APPLE,
+            Items.TOTEM_OF_UNDYING,
+            Items.NETHER_STAR,
+            Items.DRAGON_EGG);
 
     @Override
-    public ResourceLocation getPluginUid() {
+    public Identifier getPluginUid() {
         return UID;
     }
 
@@ -61,7 +59,7 @@ public class JeiCompat implements IModPlugin
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         List<ItemTrophyDisplay> displays = new ArrayList<>();
-        for (ItemTrophyRecipe recipe : recipes()) {
+        for (ItemTrophyRecipe recipe : TrophyRecipeCache.itemTrophyRecipes()) {
             try {
                 displays.add(display(recipe, false));
                 if (recipe.spin().isPresent()) {
@@ -72,6 +70,17 @@ public class JeiCompat implements IModPlugin
             }
         }
         registration.addRecipes(ItemTrophyCategory.TYPE, displays);
+    }
+
+    private static List<ItemStack> stacks(Ingredient ingredient) {
+        List<ItemStack> items = new ArrayList<>();
+        ingredient.items().forEach(holder -> {
+            ItemStack stack = new ItemStack(holder.value());
+            if (!stack.isEmpty()) {
+                items.add(stack);
+            }
+        });
+        return items;
     }
 
     @Override
@@ -95,33 +104,19 @@ public class JeiCompat implements IModPlugin
         }
     }
 
-    private static List<ItemTrophyRecipe> recipes() {
-        Level level = Minecraft.getInstance().level;
-        if (level == null) {
-            return List.of();
-        }
-        List<ItemTrophyRecipe> found = new ArrayList<>();
-        try {
-            for (RecipeHolder<CraftingRecipe> holder : level.getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING)) {
-                if (holder.value() instanceof ItemTrophyRecipe recipe) {
-                    found.add(recipe);
-                }
-            }
-        } catch (Exception e) {
-            TrophyManager.LOGGER.warn("Could not read the item trophy recipes for JEI: " + e.getMessage());
-        }
-        return found;
-    }
-
     private static ItemTrophyDisplay display(ItemTrophyRecipe recipe, boolean spin) {
         List<ItemStack> bases = stacks(recipe.base());
         List<ItemStack> sides = recipe.side().map(JeiCompat::stacks).orElseGet(List::of);
-        List<ItemStack> spins = spin ? recipe.spin().map(JeiCompat::stacks).orElseGet(List::of) : List.of();
+        List<ItemStack> spins = spin ? recipe.spin().map(JeiCompat::stacks).orElseGet(List::of) : List.<ItemStack>of();
+
         Block base = baseBlock(bases);
         HolderLookup.Provider registries = registries();
+        List<ItemStack> subjects = new ArrayList<>();
         List<ItemStack> results = new ArrayList<>();
         results.add(TrophyBlock.createDefaultItemTrophy());
-        for (ItemStack subject : EXAMPLE_SUBJECTS) {
+        for (Item item : EXAMPLE_SUBJECTS) {
+            ItemStack subject = new ItemStack(item);
+            subjects.add(subject);
             try {
                 results.add(registries == null
                         ? TrophyBlock.createDefaultItemTrophy()
@@ -130,11 +125,7 @@ public class JeiCompat implements IModPlugin
                 results.add(TrophyBlock.createDefaultItemTrophy());
             }
         }
-        return new ItemTrophyDisplay(EXAMPLE_SUBJECTS, sides, bases, spins, results);
-    }
-
-    private static List<ItemStack> stacks(Ingredient ingredient) {
-        return List.of(ingredient.getItems());
+        return new ItemTrophyDisplay(subjects, sides, bases, spins, results);
     }
 
     private static Block baseBlock(List<ItemStack> bases) {

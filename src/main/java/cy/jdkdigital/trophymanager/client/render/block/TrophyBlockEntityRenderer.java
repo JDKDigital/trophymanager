@@ -61,6 +61,7 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         state.rotZ = be.rotZ;
         state.scale = be.scale;
         state.renderItem = false;
+        state.itemIsBlock = false;
         state.entityRenderState = null;
         state.passengers.clear();
         state.hasBase = false;
@@ -68,7 +69,7 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         if ("item".equals(be.trophyType) && be.item != null && !be.item.isEmpty()) {
             state.renderItem = true;
             state.itemIsBlock = be.item.getItem() instanceof BlockItem;
-            boolean rotate = be.spin && !state.itemIsBlock;
+            boolean rotate = be.spin;
             double tick;
             if (rotate) {
                 tick = System.currentTimeMillis() / 800.0D;
@@ -138,12 +139,14 @@ public class TrophyBlockEntityRenderer implements BlockEntityRenderer<TrophyBloc
         if (state.renderItem) {
             poseStack.pushPose();
             poseStack.translate(0.5f, state.offsetY + 0.5D + state.itemBob, 0.5f);
+            if (state.itemIsBlock) {
+                poseStack.translate(0, -0.25f, 0);
+            }
             poseStack.mulPose(Axis.YP.rotationDegrees(state.itemSpin + state.rotY));
             poseStack.mulPose(Axis.XP.rotationDegrees(state.rotX));
             poseStack.mulPose(Axis.ZP.rotationDegrees(state.rotZ));
             poseStack.scale(state.scale, state.scale, state.scale);
             if (state.itemIsBlock) {
-                poseStack.translate(0, -0.25f, 0);
                 poseStack.scale(3f, 3f, 3f);
             }
             state.itemRenderState.submit(poseStack, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);

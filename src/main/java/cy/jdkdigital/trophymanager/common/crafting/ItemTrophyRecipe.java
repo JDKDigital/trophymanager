@@ -12,15 +12,23 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.display.RecipeDisplay;
+import net.minecraft.world.item.crafting.display.ShapedCraftingRecipeDisplay;
+import net.minecraft.world.item.crafting.display.SlotDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ItemTrophyRecipe extends CustomRecipe
@@ -44,6 +52,14 @@ public class ItemTrophyRecipe extends CustomRecipe
     private static final int SPIN_ROW = 2;
     private static final int WIDE = 3;
     private static final int NARROW = 1;
+
+    private static final List<Item> EXAMPLE_SUBJECTS = List.of(
+            Items.DIAMOND,
+            Items.NETHERITE_INGOT,
+            Items.ENCHANTED_GOLDEN_APPLE,
+            Items.TOTEM_OF_UNDYING,
+            Items.NETHER_STAR,
+            Items.DRAGON_EGG);
 
     private final Ingredient base;
     private final Optional<Ingredient> side;
@@ -89,6 +105,61 @@ public class ItemTrophyRecipe extends CustomRecipe
     @Override
     public RecipeSerializer<ItemTrophyRecipe> getSerializer() {
         return ModRecipes.ITEM_TROPHY.get();
+    }
+
+    @Override
+    public List<RecipeDisplay> display() {
+        List<RecipeDisplay> displays = new ArrayList<>();
+        displays.add(shaped(false));
+        if (spin.isPresent()) {
+            displays.add(shaped(true));
+        }
+        return displays;
+    }
+
+    private RecipeDisplay shaped(boolean spinning) {
+        int width = width();
+        int height = spinning ? 3 : 2;
+        List<SlotDisplay> slots = new ArrayList<>();
+        for (int row = 0; row < height; row++) {
+            for (int column = 0; column < width; column++) {
+                slots.add(slot(row, column, width));
+            }
+        }
+        return new ShapedCraftingRecipeDisplay(width, height, slots, resultDisplay(),
+                new SlotDisplay.ItemSlotDisplay(Items.CRAFTING_TABLE.builtInRegistryHolder()));
+    }
+
+    private SlotDisplay slot(int row, int column, int width) {
+        boolean centre = column == width / 2;
+        if (row == SUBJECT_ROW) {
+            return centre ? subjectDisplay() : SlotDisplay.Empty.INSTANCE;
+        }
+        if (row == BASE_ROW) {
+            if (centre) {
+                return base.display();
+            }
+            return side.map(Ingredient::display).orElse(SlotDisplay.Empty.INSTANCE);
+        }
+        if (centre) {
+            return spin.map(Ingredient::display).orElse(SlotDisplay.Empty.INSTANCE);
+        }
+        return SlotDisplay.Empty.INSTANCE;
+    }
+
+    private static SlotDisplay subjectDisplay() {
+        List<SlotDisplay> examples = new ArrayList<>();
+        for (Item item : EXAMPLE_SUBJECTS) {
+            examples.add(new SlotDisplay.ItemSlotDisplay(item.builtInRegistryHolder()));
+        }
+        return new SlotDisplay.Composite(examples);
+    }
+
+    private static SlotDisplay resultDisplay() {
+        ItemStack trophy = TrophyBlock.createDefaultItemTrophy();
+        return trophy.isEmpty()
+                ? SlotDisplay.Empty.INSTANCE
+                : new SlotDisplay.ItemStackSlotDisplay(ItemStackTemplate.fromNonEmptyStack(trophy));
     }
 
     private int width() {

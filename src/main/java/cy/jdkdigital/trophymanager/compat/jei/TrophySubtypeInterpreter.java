@@ -22,17 +22,12 @@ public class TrophySubtypeInterpreter implements ISubtypeInterpreter<ItemStack>
         }
         try {
             CompoundTag tag = data.copyTag();
-            if ("entity".equals(tag.getString("TrophyType"))) {
-                return "entity/" + tag.getCompound("TrophyEntity").getString("entityType");
+            if ("entity".equals(tag.getStringOr("TrophyType", ""))) {
+                return "entity/" + tag.getCompoundOrEmpty("TrophyEntity").getStringOr("entityType", "");
             }
-            return "item/" + tag.getCompound("TrophyItem").getString("id");
+            return "item/" + tag.getCompoundOrEmpty("TrophyItem").getStringOr("id", "");
         } catch (Exception e) {
             return "";
         }
-    }
-
-    @Override
-    public String getLegacyStringSubtypeInfo(ItemStack stack, UidContext context) {
-        return getSubtypeData(stack, context).toString();
     }
 }

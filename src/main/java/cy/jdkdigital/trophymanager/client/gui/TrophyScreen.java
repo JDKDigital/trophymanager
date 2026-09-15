@@ -87,7 +87,7 @@ public class TrophyScreen extends Screen
         addRenderableWidget(new RotationSlider(panelLeft + 10, panelTop + sliderTop + 44, 130, "Z", trophy.rotZ, v -> trophy.rotZ = v));
 
         addRenderableWidget(Button.builder(Component.translatable("gui.trophy.reset"), button -> reset()).pos(panelLeft + 10, panelTop + sliderTop + 69).size(65, 20).build());
-        addRenderableWidget(Button.builder(Component.translatable("gui.ok"), button -> onClose()).pos(panelLeft + 76, panelTop + sliderTop + 69).size(65, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("gui.apply"), button -> onClose()).pos(panelLeft + 76, panelTop + sliderTop + 69).size(65, 20).build());
     }
 
     @Override

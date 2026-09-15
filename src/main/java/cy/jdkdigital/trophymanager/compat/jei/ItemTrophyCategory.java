@@ -8,16 +8,16 @@ import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
-import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.types.IRecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class ItemTrophyCategory implements IRecipeCategory<ItemTrophyDisplay>
 {
-    public static final RecipeType<ItemTrophyDisplay> TYPE = new RecipeType<>(
-            ResourceLocation.fromNamespaceAndPath(TrophyManager.MODID, "item_trophy"), ItemTrophyDisplay.class);
+    public static final IRecipeType<ItemTrophyDisplay> TYPE =
+            IRecipeType.create(TrophyManager.MODID, "item_trophy", ItemTrophyDisplay.class);
 
     private static final int LEFT_X = 4;
     private static final int CENTRE_X = 22;
@@ -34,7 +34,12 @@ public class ItemTrophyCategory implements IRecipeCategory<ItemTrophyDisplay>
     }
 
     @Override
-    public RecipeType<ItemTrophyDisplay> getRecipeType() {
+    public Identifier getIdentifier(ItemTrophyDisplay recipe) {
+        return Identifier.fromNamespaceAndPath(TrophyManager.MODID, recipe.spinning() ? "item_trophy_spinning" : "item_trophy");
+    }
+
+    @Override
+    public IRecipeType<ItemTrophyDisplay> getRecipeType() {
         return TYPE;
     }
 

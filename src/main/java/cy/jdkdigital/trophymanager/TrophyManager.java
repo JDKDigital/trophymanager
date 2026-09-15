@@ -52,13 +52,17 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.registries.datamaps.DataMapType;
 import net.neoforged.neoforge.registries.datamaps.RegisterDataMapTypesEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 
 @Mod(TrophyManager.MODID)
 public class TrophyManager
@@ -187,6 +191,11 @@ public class TrophyManager
     @EventBusSubscriber(modid = MODID)
     public static class EventHandler
     {
+        @SubscribeEvent
+        private static void datapackSync(final OnDatapackSyncEvent event) {
+            event.sendRecipes(RecipeType.CRAFTING);
+        }
+
         @SubscribeEvent
         private static void levelUnload(final LevelEvent.Unload event) {
             TrophyBlockEntity.cachedEntities.clear();
